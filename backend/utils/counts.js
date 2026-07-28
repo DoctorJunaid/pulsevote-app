@@ -1,7 +1,17 @@
+// ==================== AGGREGATION & COUNTS UTILITY (counts.js) ====================
+// Provides high-performance database aggregation for calculating comments and bookmarks/saves
+// across multiple polls simultaneously without incurring N+1 query performance bottlenecks.
+
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 
-// Aggregates and retrieves counts of comments and bookmarks/saves for a given array of poll IDs
+/**
+ * 1. AGGREGATE COMMENTS AND BOOKMARK SAVES FOR POLL LISTS
+ * Logic & Performance Rationale:
+ * - Solves the N+1 database query problem by aggregating counts in bulk using MongoDB aggregation pipelines (`$match`, `$group`, `$unwind`).
+ * - Executes comment counting and bookmark counting concurrently using `Promise.all`.
+ * - Returns dictionary maps (`commentMap` and `saveMap`) for O(1) key-value lookup per poll ID.
+ */
 export const countsFor = async (pollIds) => {
   if (!pollIds.length) {
     return {
@@ -32,7 +42,13 @@ export const countsFor = async (pollIds) => {
   return { commentMap, saveMap };
 };
 
-// Maps comment and save counts onto shaped poll objects for frontend consumption
+/**
+ * 2. ENRICH SHAPED POLL OBJECTS WITH AGGREGATED COUNTS
+ * Logic:
+ * - Takes an array of shaped poll objects.
+ * - Queries aggregated counts in batch.
+ * - Maps the `comments` count and `saves` count onto each poll object for front-end store consumption.
+ */
 export async function withCounts(shapedPolls) {
   const { commentMap, saveMap } = await countsFor(
     shapedPolls.map((p) => p._id)

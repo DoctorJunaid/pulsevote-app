@@ -1,20 +1,34 @@
+// ==================== POLL CONTROLLER (pollController.js) ====================
+// Handles poll creation, retrieval, filtering (feed, category, type), analytics,
+// user bookmark tracking, and output formatting with calculated vote percentages.
+
 import Poll from "../models/Poll.js";
 import User from "../models/User.js";
 import Comment from "../models/Comment.js";
 import { uploadToCloudinary } from "../config/cloudinary.js";
 import { withCounts } from "../utils/counts.js";
 
-// Populate configuration for fetching poll creator profile details
+// Populate configuration for fetching poll creator profile details (name, username, avatar)
 const POP = [{ path: "creator", select: "name username avatar" }];
 
-// Generates a Set of bookmarked poll IDs for a user to allow quick O(1) checks
+/**
+ * HELPER: Generates a Set of bookmarked poll IDs for a specific user.
+ * Why: Converting user bookmarks array into a Set enables O(1) constant-time checking
+ * when transforming list of polls, drastically optimizing response rendering times.
+ */
 export const bookmarkSet = async (userId) => {
   if (!userId) return new Set();
   const user = await User.findById(userId).select("bookmarks");
   return new Set(user?.bookmarks?.map((id) => id.toString()) || []);
 };
 
-// Transforms raw database poll data into a clean structure including vote counts, percentages, and user-specific status (voted, bookmarked)
+/**
+ * HELPER: Transforms raw database poll documents into formatted response objects.
+ * Logic:
+ * - Computes total votes and percentage breakdown per option.
+ * - Checks if the current requesting user has already voted on this poll and which option they selected.
+ * - Flags whether the requesting user has bookmarked this poll.
+ */
 export const shapePoll = (poll, userId, bookmarkSet = new Set()) => {
   const isBookmarked = bookmarkSet?.has ? bookmarkSet.has(poll._id.toString()) : false;
   const totalVotes = poll.votes?.length || 0;
@@ -58,7 +72,10 @@ export const shapePoll = (poll, userId, bookmarkSet = new Set()) => {
   };
 };
 
-// Shared helper function to query, sort, shape, and send a list of polls
+/**
+ * HELPER: Shared utility to query database using custom filter, populate user profile info,
+ * attach aggregated comment/save counts, and send JSON response. (Follows DRY principles).
+ */
 const sendList = async (filter, req, res) => {
   try {
     const polls = await Poll.find(filter).populate(...POP).sort("-createdAt");
@@ -70,7 +87,15 @@ const sendList = async (filter, req, res) => {
   }
 };
 
-// Creates a new poll (supports yes/no, multiple-choice, and image options) and saves it to the database
+/**
+ * 1. CREATE POLL
+ * Logic:
+ * - Supports three poll types:
+ *   a) 'yesno': Pre-populates 'Yes' and 'No' options.
+ *   b) 'single' (Multiple Choice): Parses JSON text options array (requires at least 2).
+ *   c) 'image': Uploads attached image files to Cloudinary (requires at least 2 images).
+ * - Saves poll associated with creator (`req.userId`) and returns HTTP 201 Created.
+ */
 export const createPoll = async (req, res) => {
   try {
     const { question, category, type } = req.body;
@@ -110,7 +135,12 @@ export const createPoll = async (req, res) => {
   }
 };
 
-// Retrieves a list of polls based on filters (type, category, feed type) and formats them for the response
+/**
+ * 2. GET POLLS FEED (WITH FILTERS)
+ * Logic:
+ * - Filters by poll type (single, yesno, image, etc.) and category if specified in query string.
+ * - Supports custom 'following' feed: filters polls created exclusively by users that the requesting user follows.
+ */
 export const getPolls = async (req, res) => {
   const filter = {};
   if (req.query.type && req.query.type !== "all")
@@ -129,19 +159,24 @@ export const getPolls = async (req, res) => {
   await sendList(filter, req, res);
 };
 
-// Fetches a single poll by ID, increments its views (if not the creator), and returns it formatted
+/**
+ * 3. GET SINGLE POLL BY ID
+ * Logic:
+ * - Fetches poll document and populates creator profile details.
+ * - Increments total view count if viewer is NOT poll creator and query parameter `noview=true` is absent.
+ * - Formats poll document with options percentage and user-voted state.
+ */
 export const getPoll = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id).populate(...POP);
     if (!poll) return res.status(404).json({ message: "Poll not found" });
 
-    // Prevent view increment if request specifies ?noview=true OR if the user is the creator
     const creatorId = poll.creator?._id || poll.creator;
     const isCreator = String(creatorId) === String(req.userId);
     const skipView = req.query.noview === "true";
 
     if (!isCreator && !skipView) {
-      poll.views = (poll.views || 0) + 1; // count this view
+      poll.views = (poll.views || 0) + 1;
       await poll.save();
     }
 
@@ -153,12 +188,17 @@ export const getPoll = async (req, res) => {
   }
 };
 
-// Lists polls based on filters (alias for getPolls to ensure compatibility)
+/**
+ * ALIAS: listPolls delegates directly to getPolls for route flexibility.
+ */
 export const listPolls = async (req, res) => {
   await getPolls(req, res);
 };
 
-// Gets all polls created by the logged-in user
+/**
+ * 4. GET MY CREATED POLLS
+ * Logic: Returns list of polls created by currently logged-in user.
+ */
 export const getMyPolls = async (req, res) => {
   try {
     await sendList({ creator: req.userId }, req, res);
@@ -167,7 +207,10 @@ export const getMyPolls = async (req, res) => {
   }
 };
 
-// Gets all polls that the logged-in user voted on
+/**
+ * 5. GET VOTED POLLS
+ * Logic: Returns list of polls where currently logged-in user has cast a vote.
+ */
 export const getVotedPolls = async (req, res) => {
   try {
     await sendList({ "votes.user": req.userId }, req, res);
@@ -176,7 +219,10 @@ export const getVotedPolls = async (req, res) => {
   }
 };
 
-// Gets all polls bookmarked/saved by the logged-in user
+/**
+ * 6. GET BOOKMARKED / SAVED POLLS
+ * Logic: Fetches user document, populates bookmarked polls, and formats each with counts.
+ */
 export const getMyBookmarks = async (req, res) => {
   try {
     const me = await User.findById(req.userId).populate({
@@ -191,7 +237,10 @@ export const getMyBookmarks = async (req, res) => {
   }
 };
 
-// Returns total count of polls aggregated by poll type (single, yesno, rating, image, open)
+/**
+ * 7. GET TRENDING POLL STATS
+ * Logic: Returns counts across poll types (single, yesno, rating, image, open) to render explore widgets.
+ */
 export const getTrending = async (req, res) => {
   try {
     const types = ["single", "yesno", "rating", "image", "open"];
@@ -207,7 +256,10 @@ export const getTrending = async (req, res) => {
   }
 };
 
-// Returns detailed poll metadata along with the total count of comments for the owner
+/**
+ * 8. GET POLL ANALYTICS (FOR POLL OWNER)
+ * Logic: Authorizes creator identity, returns formatted poll stats plus total comments count.
+ */
 export const getPollAnalytics = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id).populate(...POP);

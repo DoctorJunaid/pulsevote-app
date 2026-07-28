@@ -1,10 +1,24 @@
-// ==================== USER CONTROLLER (userController.js) ====================
+// ==================== USER PROFILE & CONNECTIONS CONTROLLER ====================
+// Manages public profile views, dynamic user statistics (polls created, total votes cast,
+// follower/following counts), user relationship management (follow/unfollow), and connection lists.
+
 import User from "../models/User.js";
 import Poll from "../models/Poll.js";
 import { shapePoll, bookmarkSet } from "./pollController.js";
 import { withCounts } from "../utils/counts.js";
 
-// 1. Get public profile of a user
+/**
+ * 1. GET PUBLIC PROFILE & USER CREATED POLLS
+ * Logic:
+ * - Queries target user document by `:username` (fetching public fields: name, username, avatar, bio, following).
+ * - Executes parallel queries (`Promise.all`) for high performance:
+ *   a) Polls created by target user sorted by latest first.
+ *   b) Count of polls voted on by target user.
+ *   c) Count of followers (users who have target user's ID in their `following` array).
+ *   d) Requesting user's bookmarks & following array to compute `isFollowing` state.
+ * - Formats created polls with vote percentages and comment/save counts.
+ * - Returns user details, relation flags (`isFollowing`, `isMe`), and profile statistics.
+ */
 export const getPublicProfile = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).select(
@@ -56,7 +70,14 @@ export const getPublicProfile = async (req, res) => {
   }
 };
 
-// 2. Toggle follow or unfollow another user
+/**
+ * 2. TOGGLE FOLLOW / UNFOLLOW USER
+ * Logic:
+ * - Finds target user by `:username`.
+ * - Prevents self-following (`target._id === req.userId`).
+ * - Toggles target user's ID in requesting user's `following` array (pushes if new, pulls if existing).
+ * - Recalculates updated followers count for target user and returns updated state.
+ */
 export const toggleFollow = async (req, res) => {
   try {
     const target = await User.findOne({ username: req.params.username }).select("_id");
@@ -90,7 +111,13 @@ export const toggleFollow = async (req, res) => {
   }
 };
 
-// 3. Get user connections (followers and following lists)
+/**
+ * 3. GET USER CONNECTIONS (FOLLOWERS & FOLLOWING LISTS)
+ * Logic:
+ * - Fetches target user and populates their `following` user profiles.
+ * - Queries database for all users who follow target user (`{ following: targetUser._id }`).
+ * - Returns structured list of followers and following for social UI modals.
+ */
 export const getConnections = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username })

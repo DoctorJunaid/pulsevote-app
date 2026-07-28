@@ -1,4 +1,7 @@
-// ==================== POLL ROUTES (pollRoutes.js) ====================
+// ==================== POLL API ROUTES (pollRoutes.js) ====================
+// Defines REST API endpoints for poll creation, feed discovery, voting, bookmarking,
+// poll closing, analytics retrieval, and owner management.
+
 import express from "express";
 import {
   createPoll,
@@ -23,27 +26,91 @@ import { upload } from "../config/cloudinary.js";
 
 const pollRouter = express.Router();
 
-// All poll routes require authentication
+// Enforce JWT authentication across all poll endpoints
 pollRouter.use(protect);
 
-// Poll listing and creation routes
+/**
+ * @route   GET /api/v1/poll
+ * @desc    Fetches list of polls with optional filtering (type, category, feed)
+ */
 pollRouter.get("/", listPolls);
+
+/**
+ * @route   POST /api/v1/poll
+ * @desc    Creates a new poll (supports up to 4 image uploads via multer memory storage)
+ */
 pollRouter.post("/", upload.array("images", 4), createPoll);
+
+/**
+ * @route   GET /api/v1/poll/mine
+ * @desc    Retrieves polls created by the authenticated user
+ */
 pollRouter.get("/mine", getMyPolls);
+
+/**
+ * @route   GET /api/v1/poll/voted
+ * @desc    Retrieves polls where the user has cast a vote
+ */
 pollRouter.get("/voted", getVotedPolls);
+
+/**
+ * @route   GET /api/v1/poll/bookmarks
+ * @desc    Retrieves polls bookmarked by the user
+ */
 pollRouter.get("/bookmarks", getMyBookmarks);
+
+/**
+ * @route   GET /api/v1/poll/trending
+ * @desc    Retrieves poll counts aggregated by type for explore widgets
+ */
 pollRouter.get("/trending", getTrending);
 
-// Single poll analytics and retrieval routes
+/**
+ * @route   GET /api/v1/poll/:id/analytics
+ * @desc    Retrieves owner-only poll analytics and total discussion comment count
+ */
 pollRouter.get("/:id/analytics", getPollAnalytics);
+
+/**
+ * @route   GET /api/v1/poll/:id
+ * @desc    Retrieves single poll details and increments view count
+ */
 pollRouter.get("/:id", getPoll);
 
-// Poll interaction and management routes
+/**
+ * @route   POST /api/v1/poll/:id/vote
+ * @desc    Casts or updates a user vote on the specified poll
+ */
 pollRouter.post("/:id/vote", votePoll);
+
+/**
+ * @route   DELETE /api/v1/poll/:id/vote
+ * @desc    Revokes a previously cast vote on the specified poll
+ */
 pollRouter.delete("/:id/vote", removeVote);
+
+/**
+ * @route   PATCH /api/v1/poll/:id/close
+ * @desc    Toggles poll status between open and closed (Owner only)
+ */
 pollRouter.patch("/:id/close", closePoll);
+
+/**
+ * @route   PATCH /api/v1/poll/:id
+ * @desc    Updates poll question title or category (Owner only)
+ */
 pollRouter.patch("/:id", updatePoll);
+
+/**
+ * @route   DELETE /api/v1/poll/:id
+ * @desc    Deletes poll and all associated comments (Owner only)
+ */
 pollRouter.delete("/:id", deletePoll);
+
+/**
+ * @route   POST /api/v1/poll/:id/bookmark
+ * @desc    Toggles bookmark status for the specified poll
+ */
 pollRouter.post("/:id/bookmark", toggleBookmark);
 
 export default pollRouter;

@@ -1,10 +1,28 @@
-// ==================== VOTE CONTROLLER ====================
+// ==================== VOTE & POLL MANAGEMENT CONTROLLER ====================
+// Handles voting actions (voting, revoking votes), bookmark toggling,
+// poll modifications, closing/reopening polls, and poll deletion by owners.
+
 import User from "../models/User.js";
 import Poll from "../models/Poll.js";
 import Comment from "../models/Comment.js";
 import { notify } from "./notificationController.js";
 
-// 1. Vote on a poll
+/**
+ * HELPER: Security guard function to verify if the requesting user owns the poll.
+ * Why: Prevents unauthorized users from editing, closing, or deleting polls owned by others.
+ */
+const ownerGuard = (poll, userId) => {
+  return poll.creator.toString() === userId.toString();
+};
+
+/**
+ * 1. CAST OR SWITCH VOTE ON A POLL
+ * Logic:
+ * - Checks if the target poll exists and is open for voting.
+ * - Filters out any existing vote cast by this user to allow seamless vote switching.
+ * - Pushes the new vote object containing `{ user: req.userId, value }` to the poll's votes array.
+ * - Dispatches a real-time notification to the poll creator if this is the user's first vote on this poll.
+ */
 export const votePoll = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
@@ -21,7 +39,6 @@ export const votePoll = async (req, res) => {
       return res.status(400).json({ message: "Vote value is required" });
     }
 
-    // Check if user already voted and filter out old vote
     const hasVoted = poll.votes.some(
       (v) => v.user.toString() === req.userId.toString()
     );
@@ -43,7 +60,12 @@ export const votePoll = async (req, res) => {
   }
 };
 
-// 2. Remove a vote
+/**
+ * 2. REMOVE / REVOKE VOTE
+ * Logic:
+ * - Verifies the poll is active and open.
+ * - Removes the user's vote entry from the votes array and saves the poll.
+ */
 export const removeVote = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
@@ -65,12 +87,13 @@ export const removeVote = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-// Helper function to check if the user is the owner of the poll
-const ownerGuard = (poll, userId) => {
-  return poll.creator.toString() === userId.toString();
-};
 
-// 3. Update a poll (question and category)
+/**
+ * 3. UPDATE POLL DETAILS (OWNER ONLY)
+ * Logic:
+ * - Verifies poll exists and caller is poll creator via `ownerGuard`.
+ * - Updates question title and/or category.
+ */
 export const updatePoll = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
@@ -88,7 +111,11 @@ export const updatePoll = async (req, res) => {
   }
 };
 
-// 4. Toggle Bookmark
+/**
+ * 4. TOGGLE BOOKMARK / SAVE POLL
+ * Logic:
+ * - Adds poll ID to user's `bookmarks` array if not bookmarked, or removes it if already present.
+ */
 export const toggleBookmark = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
@@ -104,7 +131,11 @@ export const toggleBookmark = async (req, res) => {
   }
 };
 
-// 5. Close or Reopen Poll
+/**
+ * 5. CLOSE OR REOPEN POLL (OWNER ONLY)
+ * Logic:
+ * - Toggles `closed` boolean property. When closed, new votes cannot be recorded.
+ */
 export const closePoll = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
@@ -119,7 +150,12 @@ export const closePoll = async (req, res) => {
   }
 };
 
-// 6. Delete Poll and its Comments
+/**
+ * 6. DELETE POLL (OWNER ONLY)
+ * Logic:
+ * - Verifies caller ownership via `ownerGuard`.
+ * - Cleans up all comments associated with this poll before deleting poll document.
+ */
 export const deletePoll = async (req, res) => {
   try {
     const poll = await Poll.findById(req.params.id);
