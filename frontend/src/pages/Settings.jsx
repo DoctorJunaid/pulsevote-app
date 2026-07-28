@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../store/useAuth';
 import toast from 'react-hot-toast';
-import { User, Lock, AlertTriangle, Upload, Edit2 } from 'lucide-react';
+import { User, Lock, AlertTriangle, Upload, Edit2, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Settings = () => {
   const { user, updateProfile, changePassword, deleteAccount } = useAuth();
@@ -160,13 +161,22 @@ const Settings = () => {
             Public Profile
           </h2>
           {!isEditingProfile && (
-            <button
-              onClick={() => setIsEditingProfile(true)}
-              className="btn btn-secondary btn-sm"
-              style={{ marginLeft: 'auto', borderRadius: '999px', padding: '8px 16px' }}
-            >
-              <Edit2 size={16} strokeWidth={2.5} /> Edit
-            </button>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
+              <Link
+                to={`/user/${user?.username}`}
+                className="btn btn-secondary btn-sm"
+                style={{ borderRadius: '999px', padding: '8px 16px', textDecoration: 'none' }}
+              >
+                <ExternalLink size={16} strokeWidth={2.5} /> View
+              </Link>
+              <button
+                onClick={() => setIsEditingProfile(true)}
+                className="btn btn-secondary btn-sm"
+                style={{ borderRadius: '999px', padding: '8px 16px' }}
+              >
+                <Edit2 size={16} strokeWidth={2.5} /> Edit
+              </button>
+            </div>
           )}
         </div>
 

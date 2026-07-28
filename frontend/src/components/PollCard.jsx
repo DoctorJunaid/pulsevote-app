@@ -22,7 +22,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const [optimisticPoll, setOptimisticPoll] = useState(poll);
   const [isBookmarked, setIsBookmarked] = useState(poll.isBookmarked || false);
   const [showComments, setShowComments] = useState(false);
-  const [comments, setComments]   = useState([]);
+  const [comments, setComments]   = useState(null);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
@@ -177,7 +177,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const toggleComments = async () => {
     const nextState = !showComments;
     setShowComments(nextState);
-    if (nextState && comments.length === 0) {
+    if (nextState && comments === null) {
       setLoadingComments(true);
       try {
         const { data } = await api.get(`/comment/${optimisticPoll._id}`);
@@ -213,7 +213,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
       isPending: true
     };
 
-    setComments([...comments, optimisticComment]);
+    setComments([...(comments || []), optimisticComment]);
     setNewComment('');
     setReplyingTo(null);
 
@@ -244,7 +244,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
     try {
       await api.delete(`/comment/${commentId}`);
       toast.success('Comment deleted');
-      setComments(comments.filter(c => c._id !== commentId && c.parent !== commentId));
+      setComments((comments || []).filter(c => c._id !== commentId && c.parent !== commentId));
     } catch (err) {
       toast.error('Failed to delete comment');
     }
@@ -501,7 +501,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
             transition: 'color 0.2s ease',
           }}>
             <MessageSquare size={16} strokeWidth={2.5} />
-            {comments.length ? `${comments.length} Comments` : 'Discuss'}
+            {comments === null ? (optimisticPoll.comments > 0 ? `${optimisticPoll.comments} Comments` : 'Discuss') : (comments.length > 0 ? `${comments.length} Comments` : 'Discuss')}
           </button>
         </div>
 
@@ -580,7 +580,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                 }}>
                   Loading...
                 </div>
-              ) : comments.length === 0 ? (
+              ) : (comments || []).length === 0 ? (
                 <div style={{
                   fontSize: '14px', color: 'var(--color-text-tertiary)', fontWeight: 600,
                   textAlign: 'center', padding: '16px 0',
@@ -595,7 +595,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                     maxHeight: '300px', overflowY: 'auto', paddingRight: '8px',
                   }}
                 >
-                  {comments.filter(c => !c.parent).map((c, i) => (
+                  {(comments || []).filter(c => !c.parent).map((c, i) => (
                     <motion.div 
                       key={c._id || i} 
                       id={`comment-${c._id}`}
@@ -643,7 +643,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                         </div>
                       </div>
 
-                      {comments.filter(reply => reply.parent === c._id).map(reply => (
+                      {(comments || []).filter(reply => reply.parent === c._id).map(reply => (
                         <div key={reply._id} id={`comment-${reply._id}`} style={{ display: 'flex', gap: '12px', marginLeft: '32px', borderLeft: '2px solid var(--color-border)', paddingLeft: '16px', opacity: reply.isPending ? 0.5 : 1 }}>
                           <div style={{
                             width: '24px', height: '24px', borderRadius: '50%',
