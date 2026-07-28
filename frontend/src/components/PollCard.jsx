@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { Share2, Bookmark, MoreHorizontal, Users, MessageSquare, Trash2, Lock, Unlock, Send } from 'lucide-react';
+import { Share2, Bookmark, MoreHorizontal, Users, MessageSquare, Trash2, Lock, Unlock, Send, Edit, BarChart3, X } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
+import { Link } from 'react-router-dom';
 
 // Premium entrance animation for the whole card
 const cardVariants = {
@@ -25,7 +26,13 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
   const [showMenu, setShowMenu]   = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [editTitle, setEditTitle] = useState(poll.question);
+  const [editCategory, setEditCategory] = useState(poll.category || 'General');
   const menuRef = useRef(null);
 
   const isOwner = propIsOwner || (user && optimisticPoll.creator && (user._id === optimisticPoll.creator._id || user._id === optimisticPoll.creator));
@@ -100,11 +107,37 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
 
     // 3. Perform background request
     try {
-      await api.post(`/poll/${optimisticPoll._id}/vote`, { value: voteValue });
+      if (isSameOption) {
+        await api.delete(`/poll/${optimisticPoll._id}/vote`);
+      } else {
+        await api.post(`/poll/${optimisticPoll._id}/vote`, { value: voteValue });
+      }
     } catch (err) {
       // 4. Revert and notify on failure
       setOptimisticPoll(previousPoll);
-      toast.error(err.response?.data?.message || 'Failed to vote. Reverting...');
+      toast.error(err.response?.data?.message || 'Failed to update vote. Reverting...');
+    }
+  };
+
+  const handleFetchAnalytics = async () => {
+    try {
+      const { data } = await api.get(`/poll/${optimisticPoll._id}/analytics`);
+      setAnalyticsData(data);
+      setShowAnalytics(true);
+      setShowMenu(false);
+    } catch (err) {
+      toast.error('Failed to load analytics');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const { data } = await api.patch(`/poll/${optimisticPoll._id}`, { question: editTitle, category: editCategory });
+      setOptimisticPoll(prev => ({ ...prev, question: editTitle, category: editCategory }));
+      setShowEdit(false);
+      toast.success('Poll updated');
+    } catch (err) {
+      toast.error('Failed to update poll');
     }
   };
 
@@ -162,14 +195,28 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
     if (!newComment.trim()) return;
     setSubmittingComment(true);
     try {
-      const { data } = await api.post(`/comment/${optimisticPoll._id}`, { text: newComment.trim() });
-      toast.success('Comment added!');
-      setComments([data.comment || data.data, ...comments]);
+      const { data } = await api.post(`/comment/${optimisticPoll._id}`, { 
+        text: newComment.trim(),
+        parent: replyingTo?._id || null 
+      });
+      toast.success(replyingTo ? 'Reply added!' : 'Comment added!');
+      setComments([...comments, data.comment || data.data || data]);
       setNewComment('');
+      setReplyingTo(null);
     } catch (err) {
       toast.error('Failed to add comment');
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await api.delete(`/comment/${commentId}`);
+      toast.success('Comment deleted');
+      setComments(comments.filter(c => c._id !== commentId && c.parent !== commentId));
+    } catch (err) {
+      toast.error('Failed to delete comment');
     }
   };
 
@@ -226,14 +273,15 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
               {creatorName.charAt(0).toUpperCase()}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{
+              <Link to={`/user/${creatorName}`} style={{
                 fontSize: '14px', fontWeight: 800,
                 color: 'var(--color-text-primary)',
                 letterSpacing: '-0.02em',
                 lineHeight: 1,
+                textDecoration: 'none'
               }}>
                 @{creatorName}
-              </span>
+              </Link>
               <span style={{
                 fontSize: '12px',
                 color: 'var(--color-text-tertiary)',
@@ -303,6 +351,14 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                   <button onClick={handleToggleClose} className="dropdown-item">
                     {optimisticPoll.isClosed ? <Unlock size={16} strokeWidth={2.5} /> : <Lock size={16} strokeWidth={2.5} />}
                     {optimisticPoll.isClosed ? 'Reopen Poll' : 'Close Poll'}
+                  </button>
+                  <button onClick={() => { setShowEdit(true); setShowMenu(false); }} className="dropdown-item">
+                    <Edit size={16} strokeWidth={2.5} />
+                    Edit Poll
+                  </button>
+                  <button onClick={handleFetchAnalytics} className="dropdown-item">
+                    <BarChart3 size={16} strokeWidth={2.5} />
+                    View Analytics
                   </button>
                   <button onClick={handleDeletePoll} className="dropdown-item danger">
                     <Trash2 size={16} strokeWidth={2.5} />
@@ -460,14 +516,22 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                 marginBottom: '20px',
               }}>
                 <input
+                  id="commentInput"
                   type="text"
-                  placeholder="Add to the discussion..."
+                  placeholder={replyingTo ? `Replying to @${replyingTo.user?.username}...` : "Add to the discussion..."}
                   value={newComment}
                   onChange={e => setNewComment(e.target.value)}
                   style={{
                     borderRadius: '999px',
                   }}
                 />
+                {replyingTo && (
+                  <button type="button" onClick={() => { setReplyingTo(null); setNewComment(''); }} style={{
+                    background: 'none', border: 'none', color: 'var(--color-text-tertiary)', cursor: 'pointer', fontSize: '12px', fontWeight: 700
+                  }}>
+                    Cancel
+                  </button>
+                )}
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   disabled={submittingComment || !newComment.trim()}
@@ -498,40 +562,93 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                   display: 'flex', flexDirection: 'column', gap: '16px',
                   maxHeight: '300px', overflowY: 'auto', paddingRight: '8px',
                 }}>
-                  {comments.map((c, i) => (
+                  {comments.filter(c => !c.parent).map((c, i) => (
                     <motion.div 
                       key={c._id || i} 
                       initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                      style={{ display: 'flex', gap: '12px' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
                     >
-                      <div style={{
-                        width: '32px', height: '32px', borderRadius: '50%',
-                        background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', fontWeight: 800, flexShrink: 0,
-                      }}>
-                        {c.user?.username?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', gap: '12px' }}>
                         <div style={{
-                          display: 'flex', alignItems: 'baseline', gap: '8px',
+                          width: '32px', height: '32px', borderRadius: '50%',
+                          background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '12px', fontWeight: 800, flexShrink: 0,
                         }}>
-                          <span style={{ fontWeight: 800, fontSize: '14px' }}>
-                            @{c.user?.username || 'user'}
-                          </span>
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
-                            {new Date(c.createdAt || Date.now()).toLocaleTimeString([], {
-                              hour: '2-digit', minute: '2-digit',
-                            })}
-                          </span>
+                          {c.user?.username?.charAt(0).toUpperCase() || 'U'}
                         </div>
-                        <div style={{
-                          fontSize: '14.5px', color: 'var(--color-text-secondary)',
-                          lineHeight: 1.5, marginTop: '2px',
-                        }}>
-                          {c.text}
+                        <div style={{ flex: 1 }}>
+                          <div style={{
+                            display: 'flex', alignItems: 'baseline', gap: '8px',
+                          }}>
+                            <Link to={`/user/${c.user?.username}`} style={{ fontWeight: 800, fontSize: '14px', color: 'var(--color-text-primary)', textDecoration: 'none' }}>
+                              @{c.user?.username || 'user'}
+                            </Link>
+                            <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
+                              {new Date(c.createdAt || Date.now()).toLocaleTimeString([], {
+                                hour: '2-digit', minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                          <div style={{
+                            fontSize: '14.5px', color: 'var(--color-text-secondary)',
+                            lineHeight: 1.5, marginTop: '2px',
+                          }}>
+                            {c.text}
+                          </div>
+                          <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
+                            <button onClick={() => { setReplyingTo(c); document.querySelector('#commentInput')?.focus(); }} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                              Reply
+                            </button>
+                            {user?._id === c.user?._id && (
+                              <button onClick={() => handleDeleteComment(c._id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      {/* Nested Replies */}
+                      {comments.filter(reply => reply.parent === c._id).map(reply => (
+                        <div key={reply._id} style={{ display: 'flex', gap: '12px', marginLeft: '32px', borderLeft: '2px solid var(--color-border)', paddingLeft: '16px' }}>
+                          <div style={{
+                            width: '24px', height: '24px', borderRadius: '50%',
+                            background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', fontWeight: 800, flexShrink: 0,
+                          }}>
+                            {reply.user?.username?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{
+                              display: 'flex', alignItems: 'baseline', gap: '8px',
+                            }}>
+                              <Link to={`/user/${reply.user?.username}`} style={{ fontWeight: 800, fontSize: '13px', color: 'var(--color-text-primary)', textDecoration: 'none' }}>
+                                @{reply.user?.username || 'user'}
+                              </Link>
+                              <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
+                                {new Date(reply.createdAt || Date.now()).toLocaleTimeString([], {
+                                  hour: '2-digit', minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                            <div style={{
+                              fontSize: '14px', color: 'var(--color-text-secondary)',
+                              lineHeight: 1.5, marginTop: '2px',
+                            }}>
+                              {reply.text}
+                            </div>
+                            <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+                              {user?._id === reply.user?._id && (
+                                <button onClick={() => handleDeleteComment(reply._id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </motion.div>
                   ))}
                 </div>
@@ -540,6 +657,81 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Modal */}
+      {showEdit && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
+            width: '100%', maxWidth: '500px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Edit Poll</h3>
+              <button onClick={() => setShowEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="label">Question</label>
+              <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+            </div>
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="label">Category</label>
+              <select value={editCategory} onChange={e => setEditCategory(e.target.value)}>
+                <option value="General">General</option>
+                <option value="Technology">Technology</option>
+                <option value="Science">Science</option>
+                <option value="Sports">Sports</option>
+                <option value="Politics">Politics</option>
+                <option value="Entertainment">Entertainment</option>
+              </select>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', padding: '12px', borderRadius: '999px' }} onClick={handleSaveEdit}>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Modal */}
+      {showAnalytics && analyticsData && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
+            width: '100%', maxWidth: '500px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Poll Analytics</h3>
+              <button onClick={() => setShowAnalytics(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData.totalVotes}</div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Votes</div>
+              </div>
+              <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData.totalComments}</div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Comments</div>
+              </div>
+            </div>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--color-text-secondary)' }}>Vote Breakdown</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {analyticsData.options.map(opt => (
+                <div key={opt._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600 }}>{opt.text}</span>
+                  <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{opt.count} votes ({opt.percentage}%)</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </motion.div>
   );

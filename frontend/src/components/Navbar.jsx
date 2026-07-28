@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
+import { useNotifications } from '../store/useNotifications';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 const PAGE_TITLES = {
@@ -14,10 +15,13 @@ const PAGE_TITLES = {
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const menuRef = useRef(null);
+  const notifRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -27,16 +31,24 @@ const Navbar = () => {
   const displayName = user?.name || user?.username || 'User';
   const pageTitle = PAGE_TITLES[location.pathname] || 'PulseVote';
 
+  // Fetch notifications on mount
+  useEffect(() => {
+    if (user) fetchNotifications();
+  }, [user, fetchNotifications]);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowMenu(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
     };
-    if (showMenu) document.addEventListener('mousedown', handleClickOutside);
+    if (showMenu || showNotifications) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMenu]);
+  }, [showMenu, showNotifications]);
 
   const [search, setSearch] = useState('');
 
@@ -115,12 +127,73 @@ const Navbar = () => {
         </div>
 
         {/* Notification Bell */}
-        <button
-          className="btn btn-ghost btn-icon"
-          style={{ width: '44px', height: '44px' }}
-        >
-          <Bell size={20} strokeWidth={2.5} />
-        </button>
+        <div style={{ position: 'relative' }} ref={notifRef}>
+          <button
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              if (!showNotifications && unreadCount > 0) markAsRead();
+            }}
+            className="btn btn-ghost btn-icon"
+            style={{ width: '44px', height: '44px', position: 'relative' }}
+          >
+            <Bell size={20} strokeWidth={2.5} />
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '8px', right: '10px',
+                width: '10px', height: '10px',
+                background: 'var(--color-danger)',
+                borderRadius: '50%',
+                border: '2px solid var(--color-surface)',
+              }} />
+            )}
+          </button>
+          
+          {showNotifications && (
+            <div
+              className="animate-scaleIn dropdown-menu"
+              style={{
+                position: 'absolute', top: 'calc(100% + 12px)', right: '-40px',
+                zIndex: 100, transformOrigin: 'top right',
+                width: '320px', padding: '16px', borderRadius: '24px',
+                maxHeight: '400px', overflowY: 'auto',
+                boxShadow: 'var(--shadow-lg)'
+              }}
+            >
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 800 }}>Notifications</h3>
+              {notifications.length === 0 ? (
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>
+                  No new notifications
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {notifications.map((n, i) => (
+                    <div key={n._id || i} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: '12px',
+                      padding: '8px', borderRadius: '12px',
+                      background: n.isRead ? 'transparent' : 'var(--color-primary-subtle)',
+                      transition: 'background 0.2s ease'
+                    }}>
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: 'var(--color-text-primary)', color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '12px', fontWeight: 800, flexShrink: 0
+                      }}>
+                        {n.sender?.username?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div style={{ fontSize: '14px', lineHeight: 1.4 }}>
+                        <span style={{ fontWeight: 800 }}>@{n.sender?.username}</span>{' '}
+                        {n.type === 'vote' && 'voted on your poll'}
+                        {n.type === 'comment' && 'commented on your poll'}
+                        {n.type === 'follow' && 'started following you'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Separator */}
         <div style={{

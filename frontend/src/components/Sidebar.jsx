@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutGrid, Compass, Vote, Bookmark, Settings,
-  Plus, Zap, Info
+  Plus, Zap, Info, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
   { label: 'Explore',   icon: Compass,    to: '/' },
   { label: 'My Polls',  icon: Vote,       to: '/my-polls' },
+  { label: 'Voted Polls', icon: CheckCircle2, to: '/voted-polls' },
   { label: 'Bookmarks', icon: Bookmark,   to: '/bookmarks' },
   { label: 'Settings',  icon: Settings,   to: '/settings' },
   { label: 'About',     icon: Info,       to: '/about' },

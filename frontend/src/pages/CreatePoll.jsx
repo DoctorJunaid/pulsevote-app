@@ -9,6 +9,7 @@ const TYPES = [
   { value: 'single', label: 'Single Choice' },
   { value: 'yesno',  label: 'Yes / No'      },
   { value: 'rating', label: 'Rating Scale'  },
+  { value: 'image',  label: 'Image Match / vs.' },
 ];
 
 const CreatePoll = () => {
@@ -19,20 +20,42 @@ const CreatePoll = () => {
 
   const set = (key, val) => setFormData(prev => ({ ...prev, [key]: val }));
 
-  const handleAddOption    = () => options.length < 5 && setOptions([...options, { text: '' }]);
+  const handleAddOption    = () => options.length < 5 && setOptions([...options, { text: '', file: null }]);
   const handleRemoveOption = (i) => options.length > 2 && setOptions(options.filter((_, idx) => idx !== i));
   const handleOptionChange = (i, val) => {
     const next = [...options]; next[i].text = val; setOptions(next);
   };
+  const handleFileChange = (i, file) => {
+    const next = [...options]; next[i].file = file; setOptions(next);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.question.trim() || options.some(o => !o.text.trim())) {
-      return toast.error('Please fill in all fields');
+    if (!formData.question.trim()) return toast.error('Please enter a question');
+    
+    let submitData;
+    let config = {};
+
+    if (formData.type === 'image') {
+      if (options.slice(0, 2).some(o => !o.file)) return toast.error('Please upload at least 2 images');
+      submitData = new FormData();
+      submitData.append('question', formData.question);
+      submitData.append('type', formData.type);
+      submitData.append('category', formData.category);
+      options.forEach(o => {
+        if (o.file) submitData.append('images', o.file);
+      });
+      config = { headers: { 'Content-Type': 'multipart/form-data' } };
+    } else {
+      if (formData.type !== 'yesno' && options.some(o => !o.text.trim())) {
+        return toast.error('Please fill in all options');
+      }
+      submitData = { ...formData, options };
     }
+
     setLoading(true);
     try {
-      await api.post('/poll', { ...formData, options });
+      await api.post('/poll', submitData, config);
       toast.success('Poll created!');
       navigate('/');
     } catch (err) {
@@ -168,13 +191,22 @@ const CreatePoll = () => {
                 }}>
                   {i + 1}
                 </div>
-                <input
-                  type="text" required
-                  value={opt.text}
-                  onChange={e => handleOptionChange(i, e.target.value)}
-                  placeholder={`Option ${i + 1}`}
-                  style={{ flex: 1, fontWeight: 700 }}
-                />
+                {formData.type === 'image' ? (
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => handleFileChange(i, e.target.files[0])}
+                    style={{ flex: 1, fontWeight: 700 }}
+                  />
+                ) : (
+                  <input
+                    type="text" required
+                    value={opt.text}
+                    onChange={e => handleOptionChange(i, e.target.value)}
+                    placeholder={`Option ${i + 1}`}
+                    style={{ flex: 1, fontWeight: 700 }}
+                  />
+                )}
                 {options.length > 2 && (
                   <button
                     type="button"

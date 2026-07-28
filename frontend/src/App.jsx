@@ -12,6 +12,8 @@ import MyPolls     from './pages/MyPolls';
 import Bookmarks   from './pages/Bookmarks';
 import Settings    from './pages/Settings';
 import About       from './pages/About';
+import Profile     from './pages/Profile';
+import VotedPolls  from './pages/VotedPolls';
 import Layout     from './components/Layout';
 
 const pageTransition = {
@@ -80,6 +82,12 @@ const AnimatedRoutes = () => {
             <PageWrapper><Bookmarks /></PageWrapper>
           </ProtectedRoute>
         } />
+        
+        <Route path="/voted-polls" element={
+          <ProtectedRoute>
+            <PageWrapper><VotedPolls /></PageWrapper>
+          </ProtectedRoute>
+        } />
 
         <Route path="/create" element={
           <ProtectedRoute>
@@ -96,6 +104,12 @@ const AnimatedRoutes = () => {
         <Route path="/about" element={
           <ProtectedRoute>
             <PageWrapper><About /></PageWrapper>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/user/:username" element={
+          <ProtectedRoute>
+            <PageWrapper><Profile /></PageWrapper>
           </ProtectedRoute>
         } />
 
