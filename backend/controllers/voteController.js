@@ -39,10 +39,22 @@ export const votePoll = async (req, res) => {
       return res.status(400).json({ message: "Vote value is required" });
     }
 
-    const hasVoted = poll.votes.some(
+    const existingVote = poll.votes.find(
       (v) => v.user.toString() === req.userId.toString()
     );
 
+    // If user clicks the exact same option again, toggle off (remove vote)
+    if (existingVote && String(existingVote.value) === String(value)) {
+      poll.votes = poll.votes.filter(
+        (v) => v.user.toString() !== req.userId.toString()
+      );
+      await poll.save();
+      return res.json({ message: "Vote removed", removed: true });
+    }
+
+    const hasVoted = !!existingVote;
+
+    // Remove any previous vote by this user before recording new choice
     poll.votes = poll.votes.filter(
       (v) => v.user.toString() !== req.userId.toString()
     );
@@ -54,7 +66,7 @@ export const votePoll = async (req, res) => {
       await notify(poll.creator, req.userId, poll._id, "vote");
     }
 
-    res.json({ message: "Vote recorded" });
+    res.json({ message: "Vote recorded", removed: false });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

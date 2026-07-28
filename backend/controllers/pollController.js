@@ -44,7 +44,16 @@ export const shapePoll = (poll, userId, bookmarkSet = new Set()) => {
   }
 
   const options = poll.options.map((opt, idx) => {
-    const count = poll.votes?.filter((v) => String(v.value) === String(idx) || String(v.value) === String(opt._id) || v.value === opt.text).length || 0;
+    const optId = opt._id ? String(opt._id) : null;
+    const count = poll.votes?.filter((v) => {
+      const valStr = String(v.value);
+      if (optId && valStr === optId) return true;
+      if (valStr === String(idx)) return true;
+      const duplicateTexts = poll.options.filter((o) => o.text === opt.text).length > 1;
+      if (!duplicateTexts && valStr === opt.text) return true;
+      return false;
+    }).length || 0;
+
     return {
       _id: opt._id,
       text: opt.text,
@@ -80,7 +89,17 @@ const sendList = async (filter, req, res) => {
   try {
     const polls = await Poll.find(filter).populate(...POP).sort("-createdAt");
     const set = await bookmarkSet(req.userId);
-    const shaped = await withCounts(polls.map((p) => shapePoll(p, req.userId, set)));
+    let shaped = await withCounts(polls.map((p) => shapePoll(p, req.userId, set)));
+
+    const sortOpt = req.query.sort;
+    if (sortOpt === 'Top Voted' || sortOpt === 'top') {
+      shaped.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0));
+    } else if (sortOpt === 'Trending' || sortOpt === 'trending') {
+      shaped.sort((a, b) => ((b.totalVotes || 0) + (b.commentsCount || 0)) - ((a.totalVotes || 0) + (a.commentsCount || 0)));
+    } else {
+      shaped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
     res.json(shaped);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -105,11 +124,24 @@ export const createPoll = async (req, res) => {
     let options = [];
     if (type === "yesno") {
       options = [{ text: "Yes" }, { text: "No" }];
-    } else if (type === "single") {
-      const parsed = JSON.parse(req.body.options || "[]");
+    } else if (type === "single" || type === "rating") {
+      let raw = req.body.options;
+      let parsed = [];
+      if (typeof raw === "string") {
+        try {
+          parsed = JSON.parse(raw || "[]");
+        } catch (e) {
+          parsed = [];
+        }
+      } else if (Array.isArray(raw)) {
+        parsed = raw;
+      }
+
       options = parsed
+        .map((t) => (typeof t === "object" ? t?.text || "" : String(t || "")))
         .filter((t) => t && t.trim())
         .map((t) => ({ text: t.trim() }));
+
       if (options.length < 2)
         return res.status(400).json({ message: "Add at least 2 options" });
     } else if (type === "image") {
@@ -143,9 +175,14 @@ export const createPoll = async (req, res) => {
  */
 export const getPolls = async (req, res) => {
   const filter = {};
-  if (req.query.type && req.query.type !== "all")
+  if (req.query.type && req.query.type.toLowerCase() !== "all")
     filter.type = req.query.type;
-  if (req.query.category) filter.category = req.query.category;
+  if (req.query.category && req.query.category.toLowerCase() !== "all") {
+    filter.category = new RegExp(`^${req.query.category}$`, "i");
+  }
+  if (req.query.search) {
+    filter.question = new RegExp(req.query.search, "i");
+  }
 
   if (req.query.feed === "following") {
     try {

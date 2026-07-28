@@ -9,7 +9,8 @@ cloudinary.config({
 
 // storage 
 const storage = multer.memoryStorage();
-export const upload = multer({storage}).single("image");
+export const uploadInstance = multer({storage});
+export const upload = uploadInstance.single("image");
 
 export const uploadToCloudinary = (buffer, folder = "polling-app") => {
     return new Promise((resolve, reject) => {

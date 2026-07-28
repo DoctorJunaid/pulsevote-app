@@ -1,1 +1,342 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+:root {
+  /* ── Core Palette (Bold Editorial) ── */
+  --color-bg: #F4F2EE;           /* Warm, editorial off-white */
+  --color-surface: #FFFFFF;      /* Pure white for elevation */
+  --color-card: #FFFFFF;
+  --color-sidebar-bg: #FFFFFF;
+  
+  /* ── Accents ── */
+  --color-primary: #FF5238;      /* Vibrant Coral/Orange */
+  --color-primary-hover: #E03E26;
+  --color-primary-subtle: rgba(255, 82, 56, 0.08);
+  
+  --color-brand-dark: #111111;   /* For dark cards and high-contrast buttons */
+  --color-brand-dark-hover: #222222;
+  
+  --color-success: #059669;      /* Deep Emerald */
+  --color-danger: #E11D48;
+  --color-danger-subtle: rgba(225, 29, 72, 0.08);
+
+  /* ── Typography ── */
+  --color-text-primary: #111111;    /* Pitch black */
+  --color-text-secondary: #4D4A45;  /* Deep warm gray */
+  --color-text-tertiary: #757169;   /* Muted brown-gray */
+  
+  /* ── Borders & Shadows ── */
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 1); /* Sharp high contrast */
+  
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 24px 48px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Reset & Base ── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base body reset - Allow window scrolling */
+body, html {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* ── Typography Resets ── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+/* ── Custom Scrollbar (Premium, visible but minimal) ── */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+  border: 3px solid var(--color-bg); /* Match background for padding effect */
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Let Lenis handle scroll without native jumpiness */
+html.lenis {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* Remove old scrollbar-hide entirely since we want scrollbars */
+.scrollbar-hide {
+  /* Removed to restore usability */
+}
+
+/* ── Components: Buttons (Pill shaped) ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid transparent;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Accent Button */
+.btn-primary {
+  background: var(--color-primary);
+  color: #FFFFFF;
+}
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 8px 24px rgba(255, 82, 56, 0.25);
+}
+
+/* Dark Button (High Contrast) */
+.btn-dark {
+  background: var(--color-brand-dark);
+  color: #FFFFFF;
+}
+.btn-dark:hover {
+  background: var(--color-brand-dark-hover);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+.btn-secondary:hover {
+  border-color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.btn-ghost:hover {
+  background: rgba(0,0,0,0.04);
+  color: var(--color-text-primary);
+}
+
+.btn-icon {
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+/* ── Components: Cards ── */
+.card {
+  background: var(--color-card);
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-dark {
+  background: var(--color-brand-dark);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-dark .card-title {
+  color: #FFFFFF;
+}
+
+.card-dark .card-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Removed card-hover global scaling. Framer Motion handles it better. */
+
+/* ── Forms ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-left: 4px;
+  letter-spacing: -0.01em;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-text-primary);
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.04);
+}
+
+/* ── Custom Dropdowns / Menus ── */
+.dropdown-menu {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  text-align: left;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background: rgba(0,0,0,0.03);
+  color: var(--color-text-primary);
+}
+
+.dropdown-item.danger {
+  color: var(--color-danger);
+}
+.dropdown-item.danger:hover {
+  background: var(--color-danger-subtle);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-brand {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+.badge-success {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--color-success);
+}
+
+.badge-danger {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+}
+
+/* ── Animations ── */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(200%); }
+}
+
+.skeleton-shimmer {
+  background: rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite linear;
+}

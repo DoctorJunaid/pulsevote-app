@@ -22,7 +22,7 @@ import {
   deletePoll,
 } from "../controllers/voteController.js";
 import { protect } from "../middleware/auth.js";
-import { upload } from "../config/cloudinary.js";
+import { uploadInstance } from "../config/cloudinary.js";
 
 const pollRouter = express.Router();
 
@@ -39,7 +39,7 @@ pollRouter.get("/", listPolls);
  * @route   POST /api/v1/poll
  * @desc    Creates a new poll (supports up to 4 image uploads via multer memory storage)
  */
-pollRouter.post("/", upload.array("images", 4), createPoll);
+pollRouter.post("/", uploadInstance.array("images", 4), createPoll);
 
 /**
  * @route   GET /api/v1/poll/mine
