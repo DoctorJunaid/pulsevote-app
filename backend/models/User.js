@@ -38,10 +38,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Poll"
     }],
-    following: {
+    following: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
-    },
+    }],
     isVerified: {
         type: Boolean,
         default: false

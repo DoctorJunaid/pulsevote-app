@@ -61,7 +61,7 @@ export const getPublicProfile = async (req, res) => {
         created: polls.length,
         voted,
         followers,
-        following: user.following.length,
+        following: user.following?.length || 0,
       },
       polls: shaped
     });
