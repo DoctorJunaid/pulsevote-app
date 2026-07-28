@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -120,13 +121,23 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   };
 
   const handleFetchAnalytics = async () => {
+    // Show modal instantly (<10ms) with optimistic initial data
+    setAnalyticsData({
+      poll: {
+        totalVotes: optimisticPoll.totalVotes,
+        views: optimisticPoll.views || 0,
+        options: optimisticPoll.options
+      },
+      comments: optimisticPoll.commentsCount || 0
+    });
+    setShowAnalytics(true);
+    setShowMenu(false);
+
     try {
       const { data } = await api.get(`/poll/${optimisticPoll._id}/analytics`);
-      setAnalyticsData(data);
-      setShowAnalytics(true);
-      setShowMenu(false);
+      setAnalyticsData(data); // Silently update with real server data
     } catch (err) {
-      toast.error('Failed to load analytics');
+      toast.error('Failed to load latest analytics');
     }
   };
 
@@ -402,7 +413,13 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
       </div>
 
       {/* ── Vote Options ────────────────────────────── */}
-      <div style={{ padding: '0 32px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ 
+        padding: '0 32px', 
+        display: optimisticPoll.type === 'image' ? 'grid' : 'flex', 
+        gridTemplateColumns: optimisticPoll.type === 'image' ? '1fr 1fr' : undefined,
+        flexDirection: optimisticPoll.type === 'image' ? undefined : 'column', 
+        gap: '12px' 
+      }}>
         {optimisticPoll.options?.map((opt, i) => {
           const voteCount = opt.votesCount || 0;
           const pct = opt.percentage || 0;
@@ -418,60 +435,129 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                 position: 'relative',
                 width: '100%',
                 background: 'var(--color-bg)',
-                borderRadius: '999px',
-                padding: '16px 24px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                borderRadius: optimisticPoll.type === 'image' ? '16px' : '999px',
+                padding: optimisticPoll.type === 'image' ? '16px' : '16px 24px',
+                display: 'flex', 
+                flexDirection: optimisticPoll.type === 'image' ? 'column' : 'row',
+                alignItems: optimisticPoll.type === 'image' ? 'flex-start' : 'center', 
+                justifyContent: optimisticPoll.type === 'image' ? 'flex-end' : 'space-between',
                 cursor: optimisticPoll.isClosed ? 'not-allowed' : 'pointer',
                 overflow: 'hidden',
                 border: isMyVote ? '2px solid var(--color-primary)' : '2px solid transparent',
                 fontFamily: 'inherit',
                 outline: 'none',
+                aspectRatio: optimisticPoll.type === 'image' ? '1 / 1' : undefined,
+                minHeight: optimisticPoll.type === 'image' ? '150px' : undefined
               }}
             >
-              {/* Progress fill - premium spring animation */}
+              {/* Background Image for Image Polls */}
+              {optimisticPoll.type === 'image' && opt.image && (
+                <>
+                  <img 
+                    src={opt.image.includes('cloudinary.com') ? opt.image.replace('/upload/', '/upload/f_auto,q_auto,w_400,h_400,c_fill/') : opt.image} 
+                    alt={opt.text}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
+                    loading="lazy"
+                  />
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%)',
+                    zIndex: 1
+                  }} />
+                </>
+              )}
+
+              {/* Progress fill */}
               <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
+                initial={optimisticPoll.type === 'image' ? { height: 0 } : { width: 0 }}
+                animate={optimisticPoll.type === 'image' ? { height: `${pct}%` } : { width: `${pct}%` }}
                 transition={{ type: 'spring', stiffness: 100, damping: 20, mass: 1 }}
-                style={{
+                style={optimisticPoll.type === 'image' ? {
+                  position: 'absolute', left: 0, bottom: 0, right: 0,
+                  background: 'var(--color-primary)',
+                  opacity: 0.6,
+                  zIndex: 1
+                } : {
                   position: 'absolute', left: 0, top: 0, bottom: 0,
                   background: 'var(--color-primary)',
                   borderRadius: '999px',
                 }}
               />
               
-              <span style={{
-                position: 'relative', zIndex: 1,
-                fontSize: '15px', fontWeight: 800,
-                color: pct > 15 ? '#FFFFFF' : 'var(--color-text-primary)',
-                transition: 'color 0.3s ease',
-                letterSpacing: '-0.02em',
-              }}>
-                {opt.text}
-              </span>
-
               <div style={{
-                position: 'relative', zIndex: 1,
-                display: 'flex', alignItems: 'center', gap: '12px',
+                position: 'relative', zIndex: 2,
+                display: 'flex', alignItems: 'center', gap: '16px', width: '100%'
               }}>
+                {optimisticPoll.type !== 'image' && opt.image && (
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '8px',
+                    overflow: 'hidden', flexShrink: 0,
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <img 
+                      src={opt.image.includes('cloudinary.com') ? opt.image.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') : opt.image} 
+                      alt={opt.text}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                    />
+                  </div>
+                )}
                 <span style={{
-                  fontSize: '13px',
-                  color: pct > 85 ? 'rgba(255,255,255,0.8)' : 'var(--color-text-tertiary)',
-                  fontWeight: 600,
-                  transition: 'color 0.3s ease',
-                }}>
-                  {voteCount} votes
-                </span>
-                <span style={{
-                  fontSize: '15px',
+                  fontSize: optimisticPoll.type === 'image' ? '18px' : '15px', 
                   fontWeight: 800,
-                  color: pct > 95 ? '#FFFFFF' : 'var(--color-text-primary)',
-                  fontVariantNumeric: 'tabular-nums',
+                  color: optimisticPoll.type === 'image' ? '#FFFFFF' : (pct > (opt.image ? 25 : 15) ? '#FFFFFF' : 'var(--color-text-primary)'),
                   transition: 'color 0.3s ease',
+                  letterSpacing: '-0.02em',
+                  textAlign: 'left',
+                  textShadow: optimisticPoll.type === 'image' ? '0 2px 4px rgba(0,0,0,0.5)' : 'none',
+                  flex: 1
                 }}>
-                  {pct}%
+                  {opt.text}
                 </span>
               </div>
+
+                {optimisticPoll.type !== 'image' && (
+                  <div style={{
+                    position: 'relative', zIndex: 2,
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                  }}>
+                    <span style={{
+                      fontSize: '13px',
+                      color: pct > 85 ? 'rgba(255,255,255,0.8)' : 'var(--color-text-tertiary)',
+                      fontWeight: 600,
+                      transition: 'color 0.3s ease',
+                    }}>
+                      {voteCount} votes
+                    </span>
+                    <span style={{
+                      fontSize: '15px',
+                      fontWeight: 800,
+                      color: pct > 95 ? '#FFFFFF' : 'var(--color-text-primary)',
+                      fontVariantNumeric: 'tabular-nums',
+                      transition: 'color 0.3s ease',
+                    }}>
+                      {pct}%
+                    </span>
+                  </div>
+                )}
+
+              {optimisticPoll.type === 'image' && (
+                <div style={{
+                  position: 'relative', zIndex: 2,
+                  display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '4px'
+                }}>
+                  <span style={{
+                    fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: 600,
+                  }}>
+                    {voteCount} votes
+                  </span>
+                  <span style={{
+                    fontSize: '14px', fontWeight: 800, color: '#FFFFFF', fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {pct}%
+                  </span>
+                </div>
+              )}
             </motion.button>
           );
         })}
@@ -692,78 +778,118 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
       </AnimatePresence>
 
       {/* Edit Modal */}
-      {showEdit && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{
-            background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
-            width: '100%', maxWidth: '500px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Edit Poll</h3>
-              <button onClick={() => setShowEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label className="label">Question</label>
-              <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
-            </div>
-            <div className="form-group" style={{ marginBottom: '24px' }}>
-              <label className="label">Category</label>
-              <select value={editCategory} onChange={e => setEditCategory(e.target.value)}>
-                <option value="General">General</option>
-                <option value="Technology">Technology</option>
-                <option value="Science">Science</option>
-                <option value="Sports">Sports</option>
-                <option value="Politics">Politics</option>
-                <option value="Entertainment">Entertainment</option>
-              </select>
-            </div>
-            <button className="btn btn-primary" style={{ width: '100%', padding: '12px', borderRadius: '999px' }} onClick={handleSaveEdit}>
-              Save Changes
-            </button>
-          </div>
-        </div>
+      {createPortal(
+        <AnimatePresence>
+          {showEdit && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(4px)'
+              }}
+              onClick={() => setShowEdit(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
+                  width: '100%', maxWidth: '500px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Edit Poll</h3>
+                  <button onClick={() => setShowEdit(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                </div>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="label">Question</label>
+                  <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: '24px' }}>
+                  <label className="label">Category</label>
+                  <select value={editCategory} onChange={e => setEditCategory(e.target.value)}>
+                    <option value="General">General</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Science">Science</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Politics">Politics</option>
+                    <option value="Entertainment">Entertainment</option>
+                  </select>
+                </div>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '12px', borderRadius: '999px' }} onClick={handleSaveEdit}>
+                  Save Changes
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
 
       {/* Analytics Modal */}
-      {showAnalytics && analyticsData && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{
-            background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
-            width: '100%', maxWidth: '500px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Poll Analytics</h3>
-              <button onClick={() => setShowAnalytics(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData.totalVotes}</div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Votes</div>
-              </div>
-              <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData.totalComments}</div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Comments</div>
-              </div>
-            </div>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--color-text-secondary)' }}>Vote Breakdown</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {analyticsData.options.map(opt => (
-                <div key={opt._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>{opt.text}</span>
-                  <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{opt.count} votes ({opt.percentage}%)</span>
+      {createPortal(
+        <AnimatePresence>
+          {showAnalytics && analyticsData && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(4px)'
+              }}
+              onClick={() => setShowAnalytics(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: 'var(--color-surface)', padding: '32px', borderRadius: '24px',
+                  width: '100%', maxWidth: '500px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800 }}>Poll Analytics</h3>
+                  <button onClick={() => setShowAnalytics(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData?.poll?.views || 0}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Views</div>
+                  </div>
+                  <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData?.poll?.totalVotes || 0}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Votes</div>
+                  </div>
+                  <div style={{ flex: 1, padding: '16px', background: 'var(--color-bg)', borderRadius: '16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: 800 }}>{analyticsData?.comments || 0}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>Comments</div>
+                  </div>
+                </div>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--color-text-secondary)' }}>Vote Breakdown</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {analyticsData?.poll?.options?.map(opt => (
+                    <div key={opt._id || opt.text} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600 }}>{opt.text}</span>
+                      <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{opt.votesCount || opt.count || 0} votes ({opt.percentage || 0}%)</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
 
     </motion.div>
