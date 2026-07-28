@@ -51,7 +51,7 @@ export const addComment = async (req, res) => {
 
     const poll = await Poll.findById(req.params.id).select("creator");
     if (poll) {
-      await notify(poll.creator, req.userId, poll._id, "comment");
+      notify(poll.creator, req.userId, poll._id, "comment").catch(() => {});
     }
 
     res.status(201).json(populated);

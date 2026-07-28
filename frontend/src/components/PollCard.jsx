@@ -193,20 +193,50 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    setSubmittingComment(true);
+    
+    const textToSubmit = newComment.trim();
+    const parentId = replyingTo?._id || null;
+    
+    // Optimistic UI setup
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment = {
+      _id: tempId,
+      text: textToSubmit,
+      parent: parentId,
+      user: {
+        _id: user?._id,
+        name: user?.name,
+        username: user?.username,
+        avatar: user?.avatar,
+      },
+      createdAt: new Date().toISOString(),
+      isPending: true
+    };
+
+    setComments([...comments, optimisticComment]);
+    setNewComment('');
+    setReplyingTo(null);
+
+    // Scroll to the new comment
+    setTimeout(() => {
+      const el = document.getElementById(`comment-${tempId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 50);
+
+    // Backend request
     try {
       const { data } = await api.post(`/comment/${optimisticPoll._id}`, { 
-        text: newComment.trim(),
-        parent: replyingTo?._id || null 
+        text: textToSubmit,
+        parent: parentId 
       });
-      toast.success(replyingTo ? 'Reply added!' : 'Comment added!');
-      setComments([...comments, data.comment || data.data || data]);
-      setNewComment('');
-      setReplyingTo(null);
+      const savedComment = data.comment || data.data || data;
+      setComments(prev => prev.map(c => c._id === tempId ? savedComment : c));
+      toast.success(parentId ? 'Reply added!' : 'Comment added!');
     } catch (err) {
       toast.error('Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
+      setComments(prev => prev.filter(c => c._id !== tempId));
     }
   };
 
@@ -558,14 +588,18 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                   Be the first to comment.
                 </div>
               ) : (
-                <div style={{
-                  display: 'flex', flexDirection: 'column', gap: '16px',
-                  maxHeight: '300px', overflowY: 'auto', paddingRight: '8px',
-                }}>
+                <div 
+                  id={`comments-${optimisticPoll._id}`}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: '16px',
+                    maxHeight: '300px', overflowY: 'auto', paddingRight: '8px',
+                  }}
+                >
                   {comments.filter(c => !c.parent).map((c, i) => (
                     <motion.div 
                       key={c._id || i} 
-                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                      id={`comment-${c._id}`}
+                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: c.isPending ? 0.5 : 1, x: 0 }} transition={{ delay: i * 0.05 }}
                       style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
                     >
                       <div style={{ display: 'flex', gap: '12px' }}>
@@ -585,7 +619,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                               @{c.user?.username || 'user'}
                             </Link>
                             <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
-                              {new Date(c.createdAt || Date.now()).toLocaleTimeString([], {
+                              {c.isPending ? 'Posting...' : new Date(c.createdAt || Date.now()).toLocaleTimeString([], {
                                 hour: '2-digit', minute: '2-digit',
                               })}
                             </span>
@@ -609,9 +643,8 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                         </div>
                       </div>
 
-                      {/* Nested Replies */}
                       {comments.filter(reply => reply.parent === c._id).map(reply => (
-                        <div key={reply._id} style={{ display: 'flex', gap: '12px', marginLeft: '32px', borderLeft: '2px solid var(--color-border)', paddingLeft: '16px' }}>
+                        <div key={reply._id} id={`comment-${reply._id}`} style={{ display: 'flex', gap: '12px', marginLeft: '32px', borderLeft: '2px solid var(--color-border)', paddingLeft: '16px', opacity: reply.isPending ? 0.5 : 1 }}>
                           <div style={{
                             width: '24px', height: '24px', borderRadius: '50%',
                             background: 'var(--color-bg)', border: '1px solid var(--color-border)',
@@ -628,7 +661,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
                                 @{reply.user?.username || 'user'}
                               </Link>
                               <span style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', fontWeight: 600 }}>
-                                {new Date(reply.createdAt || Date.now()).toLocaleTimeString([], {
+                                {reply.isPending ? 'Posting...' : new Date(reply.createdAt || Date.now()).toLocaleTimeString([], {
                                   hour: '2-digit', minute: '2-digit',
                                 })}
                               </span>
