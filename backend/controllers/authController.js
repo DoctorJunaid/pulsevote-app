@@ -7,7 +7,7 @@ import Poll from "../models/Poll.js";
 import Comment from "../models/Comment.js";
 import { uploadToCloudinary } from "../config/cloudinary.js";
 import { generateOpt, optValid, otpExpiry } from "../utils/opt.js";
-import { sendOtpEmail } from "../config/mailer.js";
+import { sendVerificationOtpEmail } from "../config/mailer.js";
 import jwt from "jsonwebtoken";
 
 /**
@@ -77,7 +77,7 @@ export const register = async (req, res) => {
             otpExpiry: otpExpiry()
         });
 
-        await sendOtpEmail(email, 'Verify your account', `Your OTP is ${otp} and it will expire in 10 minutes`);
+        await sendVerificationOtpEmail(email, otp);
         res.status(201).json({
             needsVerification: true,
             email,
@@ -145,7 +145,7 @@ export const resendOtp = async (req, res) => {
         user.otpExpiry = otpExpiry();
         await user.save();
 
-        await sendOtpEmail(email, 'Verify your account', `Your OTP is ${otp} and it will expire in 10 minutes`);
+        await sendVerificationOtpEmail(email, otp);
         res.status(200).json({ message: "OTP sent successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });

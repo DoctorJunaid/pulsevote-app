@@ -3,7 +3,7 @@
 // verifying reset OTP codes, and setting new user credentials.
 
 import User from "../models/User.js";
-import { sendOtpEmail } from "../config/mailer.js";
+import { sendPasswordResetOtpEmail } from "../config/mailer.js";
 import { generateOpt, optValid, otpExpiry } from "../utils/opt.js";
 
 /**
@@ -24,7 +24,7 @@ export const forgotPassword = async (req, res) => {
         user.otpExpiry = otpExpiry();
         await user.save();
 
-        await sendOtpEmail(email, 'Verify your account', `Your OTP is ${otp} and it will expire in 10 minutes`);
+        await sendPasswordResetOtpEmail(email, otp);
         res.status(200).json({ message: "OTP sent successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
