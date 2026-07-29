@@ -17,3 +17,17 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Interceptor to automatically log out when JWT token expires (401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('pollify_token');
+      if (window.location.pathname !== '/auth' && window.location.pathname !== '/') {
+        window.location.href = '/auth';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
