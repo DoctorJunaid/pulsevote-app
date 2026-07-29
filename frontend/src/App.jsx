@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { useAuth } from './store/useAuth';
 
 import Auth       from './pages/Auth';
+import Landing    from './pages/Landing';
 import Feed       from './pages/Feed';
 import CreatePoll  from './pages/CreatePoll';
 import Dashboard   from './pages/Dashboard';
@@ -66,6 +67,10 @@ const AnimatedRoutes = () => {
         } />
 
         <Route path="/" element={
+          <PageWrapper><Landing /></PageWrapper>
+        } />
+
+        <Route path="/explore" element={
           <ProtectedRoute>
             <PageWrapper><Feed /></PageWrapper>
           </ProtectedRoute>

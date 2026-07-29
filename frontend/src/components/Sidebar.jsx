@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
-  { label: 'Explore',   icon: Compass,    to: '/' },
+  { label: 'Explore',   icon: Compass,    to: '/explore' },
   { label: 'My Polls',  icon: Vote,       to: '/my-polls' },
   { label: 'Voted Polls', icon: CheckCircle2, to: '/voted-polls' },
   { label: 'Bookmarks', icon: Bookmark,   to: '/bookmarks' },
