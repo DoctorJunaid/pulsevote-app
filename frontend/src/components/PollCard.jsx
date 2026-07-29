@@ -49,8 +49,13 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
     const handleClick = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
     };
-    if (showMenu) document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    const events = ['mousedown', 'touchstart'];
+    if (showMenu) {
+      events.forEach(event => document.addEventListener(event, handleClick));
+    }
+    return () => {
+      events.forEach(event => document.removeEventListener(event, handleClick));
+    };
   }, [showMenu]);
 
   const handleVote = async (optionIndex) => {
@@ -166,6 +171,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   };
 
   const handleToggleClose = async () => {
+    setShowMenu(false);
     try {
       const { data } = await api.patch(`/poll/${optimisticPoll._id}/close`);
       toast.success(data.message || 'Poll status updated');
@@ -176,6 +182,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   };
 
   const handleDeletePoll = async () => {
+    setShowMenu(false);
     try {
       await api.delete(`/poll/${optimisticPoll._id}`);
       toast.success('Poll deleted successfully');

@@ -408,6 +408,14 @@ input:focus, select:focus, textarea:focus {
   display: flex !important;
 }
 
+.mobile-search-trigger {
+  display: none !important;
+}
+
+.desktop-search {
+  display: block !important;
+}
+
 @media (max-width: 1023px) {
   .main-content-area {
     margin-left: 0 !important;
@@ -438,6 +446,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 767px) {
+  .mobile-search-trigger {
+    display: flex !important;
+  }
+  
+  .desktop-search {
+    display: none !important;
+  }
+
   .card {
     padding: 16px !important;
     border-radius: 20px !important;
