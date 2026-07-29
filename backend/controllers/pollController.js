@@ -321,3 +321,25 @@ export const getPollAnalytics = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+/**
+ * 9. RECORD POLL VIEW
+ * Logic: Increments view count when a poll card is viewed/rendered by a non-creator.
+ */
+export const recordView = async (req, res) => {
+  try {
+    const poll = await Poll.findById(req.params.id);
+    if (!poll) return res.status(404).json({ message: "Poll not found" });
+
+    const creatorId = poll.creator?._id || poll.creator;
+    const isCreator = String(creatorId) === String(req.userId);
+
+    if (!isCreator) {
+      poll.views = (poll.views || 0) + 1;
+      await poll.save();
+    }
+    res.json({ views: poll.views });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

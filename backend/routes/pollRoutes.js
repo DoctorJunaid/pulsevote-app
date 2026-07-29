@@ -12,6 +12,7 @@ import {
   getTrending,
   getPoll,
   getPollAnalytics,
+  recordView,
 } from "../controllers/pollController.js";
 import {
   votePoll,
@@ -76,6 +77,12 @@ pollRouter.get("/:id/analytics", getPollAnalytics);
  * @desc    Retrieves single poll details and increments view count
  */
 pollRouter.get("/:id", getPoll);
+
+/**
+ * @route   POST /api/v1/poll/:id/view
+ * @desc    Records a view on the specified poll
+ */
+pollRouter.post("/:id/view", recordView);
 
 /**
  * @route   POST /api/v1/poll/:id/vote

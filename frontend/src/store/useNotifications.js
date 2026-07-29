@@ -11,8 +11,8 @@ export const useNotifications = create((set) => ({
     try {
       const { data } = await api.get('/notifications');
       set({ 
-        notifications: data.notifications || [], 
-        unreadCount: data.unreadCount || 0,
+        notifications: data.items || data.notifications || [], 
+        unreadCount: data.unread ?? data.unreadCount ?? 0,
         isLoading: false 
       });
     } catch (error) {

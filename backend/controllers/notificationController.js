@@ -37,7 +37,7 @@ export const getNotifications = async (req, res) => {
       read: false,
     });
 
-    res.json({ items, unread });
+    res.json({ items, unread, notifications: items, unreadCount: unread });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

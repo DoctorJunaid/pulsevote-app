@@ -34,9 +34,24 @@ const Navbar = ({ onToggleMobile }) => {
   const displayName = user?.name || user?.username || 'User';
   const pageTitle = PAGE_TITLES[location.pathname] || 'PulseVote';
 
-  // Fetch notifications on mount
+  // Helper for formatting relative time
+  const formatTimeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  // Fetch notifications on mount and poll every 15 seconds
   useEffect(() => {
-    if (user) fetchNotifications();
+    if (!user) return;
+    fetchNotifications();
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 15000);
+    return () => clearInterval(interval);
   }, [user, fetchNotifications]);
 
   // Focus search input when expanded on mobile
@@ -265,29 +280,54 @@ const Navbar = ({ onToggleMobile }) => {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {notifications.map((n, i) => (
-                        <div key={n._id || i} style={{
-                          display: 'flex', alignItems: 'flex-start', gap: '12px',
-                          padding: '8px', borderRadius: '12px',
-                          background: n.isRead ? 'transparent' : 'var(--color-primary-subtle)',
-                          transition: 'background 0.2s ease'
-                        }}>
-                          <div style={{
-                            width: '32px', height: '32px', borderRadius: '50%',
-                            background: 'var(--color-text-primary)', color: '#fff',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 800, flexShrink: 0
-                          }}>
-                            {n.sender?.username?.charAt(0).toUpperCase() || 'U'}
-                          </div>
-                          <div style={{ fontSize: '13.5px', lineHeight: 1.4 }}>
-                            <span style={{ fontWeight: 800 }}>@{n.sender?.username}</span>{' '}
-                            {n.type === 'vote' && 'voted on your poll'}
-                            {n.type === 'comment' && 'commented on your poll'}
-                            {n.type === 'follow' && 'started following you'}
-                          </div>
-                        </div>
-                      ))}
+                      {notifications.map((n, i) => {
+                        const actor = n.actor || n.sender;
+                        const isRead = n.read !== undefined ? n.read : n.isRead;
+                        const targetUrl = actor?.username ? `/profile/${actor.username}` : '#';
+                        return (
+                          <Link
+                            key={n._id || i}
+                            to={targetUrl}
+                            onClick={() => setShowNotifications(false)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '12px',
+                              padding: '8px 10px', borderRadius: '12px',
+                              background: isRead ? 'transparent' : 'var(--color-primary-subtle)',
+                              transition: 'background 0.2s ease',
+                              textDecoration: 'none',
+                              color: 'inherit'
+                            }}
+                          >
+                            {actor?.avatar ? (
+                              <img
+                                src={actor.avatar}
+                                alt={actor.username}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '32px', height: '32px', borderRadius: '50%',
+                                background: 'var(--color-text-primary)', color: '#fff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '12px', fontWeight: 800, flexShrink: 0
+                              }}>
+                                {actor?.username?.charAt(0).toUpperCase() || 'U'}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '13px', lineHeight: 1.3, flex: 1 }}>
+                              <div>
+                                <span style={{ fontWeight: 800 }}>@{actor?.username || 'user'}</span>{' '}
+                                {n.type === 'vote' && 'voted on your poll'}
+                                {n.type === 'comment' && 'commented on your poll'}
+                                {n.type === 'follow' && 'started following you'}
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--color-text-tertiary)', marginTop: '2px', fontWeight: 600 }}>
+                                {formatTimeAgo(n.createdAt)}
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

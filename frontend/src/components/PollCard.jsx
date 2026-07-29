@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { Share2, Bookmark, MoreHorizontal, Users, MessageSquare, Trash2, Lock, Unlock, Send, Edit, BarChart3, X } from 'lucide-react';
+import { Share2, Bookmark, MoreHorizontal, Users, MessageSquare, Trash2, Lock, Unlock, Send, Edit, BarChart3, X, Eye } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
 import { Link } from 'react-router-dom';
 
@@ -35,8 +35,31 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const [editTitle, setEditTitle] = useState(poll.question);
   const [editCategory, setEditCategory] = useState(poll.category || 'General');
   const menuRef = useRef(null);
+  const viewRecorded = useRef(false);
 
   const isOwner = propIsOwner || (user && optimisticPoll.creator && (user._id === optimisticPoll.creator._id || user._id === optimisticPoll.creator));
+
+  // Record view on card mount once per session
+  useEffect(() => {
+    if (!viewRecorded.current && optimisticPoll?._id) {
+      viewRecorded.current = true;
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('pv_viewed_polls') || '[]');
+        if (stored.includes(optimisticPoll._id)) return;
+
+        api.post(`/poll/${optimisticPoll._id}/view`)
+          .then(({ data }) => {
+            if (typeof data?.views === 'number') {
+              setOptimisticPoll(prev => ({ ...prev, views: data.views }));
+              sessionStorage.setItem('pv_viewed_polls', JSON.stringify([...stored, optimisticPoll._id]));
+            }
+          })
+          .catch(() => {});
+      } catch (e) {
+        api.post(`/poll/${optimisticPoll._id}/view`).catch(() => {});
+      }
+    }
+  }, [optimisticPoll?._id]);
 
   // Sync with upstream changes
   useEffect(() => {
@@ -581,6 +604,10 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Users size={16} strokeWidth={2.5} />
             {totalVotes} Votes
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Eye size={16} strokeWidth={2.5} />
+            {optimisticPoll.views || 0} Views
           </span>
           <button onClick={toggleComments} style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,

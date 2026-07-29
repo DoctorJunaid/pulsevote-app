@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import Poll from "../models/Poll.js";
 import { shapePoll, bookmarkSet } from "./pollController.js";
 import { withCounts } from "../utils/counts.js";
+import { notify } from "./notificationController.js";
 
 /**
  * 1. GET PUBLIC PROFILE & USER CREATED POLLS
@@ -96,6 +97,7 @@ export const toggleFollow = async (req, res) => {
       me.following.pull(target._id);
     } else {
       me.following.push(target._id);
+      notify(target._id, req.userId, null, "follow").catch(() => {});
     }
 
     await me.save();
