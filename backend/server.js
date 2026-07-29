@@ -47,7 +47,11 @@ app.get("/", (req, res) => {
     res.send("API IS WORKING");
 });
 
-// Start Express HTTP Server listener
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Start Express HTTP Server listener (only if not run as serverless on Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+export default app;
