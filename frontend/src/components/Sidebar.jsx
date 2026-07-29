@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutGrid, Compass, Vote, Bookmark, Settings,
-  Plus, Zap, Info, CheckCircle2
+  Plus, Zap, Info, CheckCircle2, X
 } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutGrid, to: '/dashboard' },
@@ -17,60 +17,64 @@ const navItems = [
   { label: 'About',     icon: Info,       to: '/about' },
 ];
 
-const Sidebar = () => {
+const SidebarContent = ({ onCloseMobile }) => {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const displayName = user?.name || user?.username || 'User';
 
   return (
-    <aside style={{
-      width: '260px',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '32px 24px',
-      background: 'var(--color-sidebar-bg)',
-      borderRight: '1px solid var(--color-border)',
-      overflowY: 'auto',
-      userSelect: 'none',
-      zIndex: 50,
-    }}>
-
-      {/* ── Brand ─────────────────────────────────────── */}
-      <Link to="/" style={{
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Brand & Close Button */}
+      <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
-        textDecoration: 'none',
-        marginBottom: '48px',
+        justifyContent: 'space-between',
+        marginBottom: '36px',
       }}>
-        <motion.div 
-          whileHover={{ rotate: 15, scale: 1.1 }}
+        <Link 
+          to="/" 
+          onClick={onCloseMobile}
           style={{
-            width: '38px', height: '38px',
-            background: 'var(--color-text-primary)',
-            borderRadius: '12px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            textDecoration: 'none',
           }}
         >
-          <Zap size={20} color="#FFFFFF" strokeWidth={2.5} />
-        </motion.div>
-        <div style={{
-          fontSize: '22px',
-          fontWeight: 800,
-          color: 'var(--color-text-primary)',
-          letterSpacing: '-0.06em',
-          lineHeight: 1,
-        }}>
-          PulseVote.
-        </div>
-      </Link>
+          <motion.div 
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            style={{
+              width: '38px', height: '38px',
+              background: 'var(--color-text-primary)',
+              borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Zap size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </motion.div>
+          <div style={{
+            fontSize: '22px',
+            fontWeight: 800,
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.06em',
+            lineHeight: 1,
+          }}>
+            PulseVote.
+          </div>
+        </Link>
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="btn btn-ghost btn-icon mobile-only"
+            style={{ width: '40px', height: '40px' }}
+          >
+            <X size={22} strokeWidth={2.5} />
+          </button>
+        )}
+      </div>
 
-      {/* ── Navigation ────────────────────────────────── */}
+      {/* Navigation */}
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {navItems.map(({ label, icon: Icon, to }) => {
           const isActive = to === '/' ? pathname === '/' : pathname.startsWith(to);
@@ -78,6 +82,7 @@ const Sidebar = () => {
             <Link
               key={label}
               to={to}
+              onClick={onCloseMobile}
               style={{ textDecoration: 'none' }}
             >
               <motion.div
@@ -100,15 +105,14 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* ── User Info & CTA ───────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        
-        <Link to="/create" style={{ textDecoration: 'none', width: '100%' }}>
+      {/* User Info & CTA */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+        <Link to="/create" onClick={onCloseMobile} style={{ textDecoration: 'none', width: '100%' }}>
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="btn btn-dark" style={{
-              width: '100%', padding: '16px', gap: '8px',
+              width: '100%', padding: '14px', gap: '8px',
             }}
           >
             <Plus size={18} strokeWidth={2.5} />
@@ -117,7 +121,7 @@ const Sidebar = () => {
         </Link>
 
         <motion.div 
-          whileHover={{ y: -2, boxShadow: 'var(--shadow-md)' }}
+          whileHover={{ y: -2 }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -126,8 +130,6 @@ const Sidebar = () => {
             borderRadius: '20px',
             background: 'var(--color-bg)',
             border: '1px solid var(--color-border)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
           }}
         >
           {user?.avatar ? (
@@ -166,8 +168,82 @@ const Sidebar = () => {
           </div>
         </motion.div>
       </div>
+    </div>
+  );
+};
 
-    </aside>
+const Sidebar = ({ mobileOpen, onCloseMobile }) => {
+  const { pathname } = useLocation();
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    if (onCloseMobile) onCloseMobile();
+  }, [pathname]);
+
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on screens < 1024px) */}
+      <aside className="desktop-only" style={{
+        width: '260px',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        flexDirection: 'column',
+        padding: '32px 24px',
+        background: 'var(--color-sidebar-bg)',
+        borderRight: '1px solid var(--color-border)',
+        overflowY: 'auto',
+        userSelect: 'none',
+        zIndex: 50,
+      }}>
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile Drawer (visible when mobileOpen is true on screens < 1024px) */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onCloseMobile}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.4)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 90,
+              }}
+            />
+            {/* Drawer panel */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              style={{
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '280px',
+                maxWidth: '85vw',
+                background: 'var(--color-surface)',
+                padding: '24px 20px',
+                zIndex: 100,
+                boxShadow: 'var(--shadow-float)',
+                overflowY: 'auto',
+              }}
+            >
+              <SidebarContent onCloseMobile={onCloseMobile} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

@@ -296,8 +296,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
     >
 
       {/* ── Editorial Header ──────────────────────────── */}
-      <div style={{
-        padding: '32px 32px 0',
+      <div className="poll-card-header" style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
       }}>
         <div style={{ flex: 1 }}>
@@ -413,8 +412,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
       </div>
 
       {/* ── Vote Options ────────────────────────────── */}
-      <div style={{ 
-        padding: '0 32px', 
+      <div className="poll-card-body" style={{ 
         display: optimisticPoll.type === 'image' ? 'grid' : 'flex', 
         gridTemplateColumns: optimisticPoll.type === 'image' ? '1fr 1fr' : undefined,
         flexDirection: optimisticPoll.type === 'image' ? undefined : 'column', 
@@ -564,10 +562,9 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
       </div>
 
       {/* ── Card Footer ───────────────────────────────── */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '24px 32px',
-        marginTop: '32px',
+      <div className="poll-card-footer" style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px',
+        marginTop: '24px',
         borderTop: '1px solid var(--color-border)',
       }}>
         <div style={{
@@ -624,9 +621,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{
-              padding: '0 32px 32px',
-            }}>
+            <div className="poll-card-comments">
               <form onSubmit={handleAddComment} style={{
                 display: 'flex', gap: '12px',
                 marginBottom: '20px',

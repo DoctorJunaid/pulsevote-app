@@ -32,10 +32,12 @@ const VotedPolls = () => {
       {/* ── Massive Editorial Header ────────────────────── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+        flexWrap: 'wrap', gap: '16px',
+        marginBottom: '16px',
       }}>
         <div>
           <h1 style={{
-            fontSize: '48px', fontWeight: 800,
+            fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800,
             color: 'var(--color-text-primary)',
             margin: 0, letterSpacing: '-0.06em',
             lineHeight: 1.1,
@@ -43,7 +45,7 @@ const VotedPolls = () => {
             Voted Polls.
           </h1>
           <p style={{
-            margin: '12px 0 0', fontSize: '18px', fontWeight: 500,
+            margin: '8px 0 0', fontSize: '16px', fontWeight: 500,
             color: 'var(--color-text-secondary)',
             letterSpacing: '-0.01em',
           }}>

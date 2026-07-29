@@ -179,11 +179,11 @@ const Dashboard = () => {
       {/* ── Massive Editorial Header ────────────────────── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: 'easeOut' }}
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}
       >
         <div>
           <h1 style={{
-            fontSize: '48px', fontWeight: 800,
+            fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 800,
             color: 'var(--color-text-primary)',
             margin: 0, letterSpacing: '-0.06em',
             lineHeight: 1.1,
@@ -192,8 +192,8 @@ const Dashboard = () => {
             {displayName}.
           </h1>
           <p style={{
-            margin: '16px 0 0',
-            fontSize: '18px', fontWeight: 500,
+            margin: '12px 0 0',
+            fontSize: '16px', fontWeight: 500,
             color: 'var(--color-text-secondary)',
             letterSpacing: '-0.01em',
           }}>
@@ -212,7 +212,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* ── Stat Cards ──────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+      <div className="dashboard-stat-grid">
         <StatCard title="Polls Created" value={userStats.created || 0} icon={BarChart2} isAccent={true} delayIndex={1} />
         <StatCard title="Polls Voted" value={userStats.voted || 0} icon={CheckCircle2} isDark={true} delayIndex={2} />
         <StatCard title="Bookmarks" value={userStats.bookmark || 0} icon={Bookmark} delayIndex={3} />
@@ -222,20 +222,20 @@ const Dashboard = () => {
       {/* ── Charts Row ─────────────────────────────────── */}
       <motion.div 
         initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ type: 'spring', damping: 25 }}
-        style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}
+        className="dashboard-split-grid"
       >
-        <div className="card card-hover" style={{ minHeight: '360px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+        <div className="card card-hover" style={{ minHeight: '340px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '-0.04em' }}>Voting Activity</div>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginTop: '4px' }}>Weekly votes and voter engagement</div>
             </div>
-            <div style={{ display: 'flex', gap: '20px', fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#FF5238' }} />Votes</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#111111' }} />Voters</span>
             </div>
           </div>
-          <div style={{ flex: 1, width: '100%', minHeight: '240px' }}>
+          <div style={{ flex: 1, width: '100%', minHeight: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={votingActivityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -261,8 +261,8 @@ const Dashboard = () => {
 
         <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '-0.04em', marginBottom: '4px' }}>Categories</div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginBottom: '32px' }}>Distribution across topics</div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', gap: '32px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginBottom: '24px' }}>Distribution across topics</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', gap: '24px' }}>
             <div style={{ width: '160px', height: '160px', position: 'relative', flexShrink: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -292,10 +292,10 @@ const Dashboard = () => {
       {/* ── Bottom Section ─────────────────────────────── */}
       <motion.div 
         initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ type: 'spring', damping: 25 }}
-        style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}
+        className="dashboard-split-grid"
       >
         <div className="card card-hover">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '-0.04em' }}>Recent Polls</div>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginTop: '4px' }}>Latest community discussions</div>
@@ -304,49 +304,51 @@ const Dashboard = () => {
               View All <ArrowRight size={16} strokeWidth={3} />
             </Link>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ padding: '0 0 16px 0', textAlign: 'left', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Question</th>
-                <th style={{ padding: '0 0 16px', textAlign: 'left', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Category</th>
-                <th style={{ padding: '0 0 16px', textAlign: 'right', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Votes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentPolls.length === 0 ? (
+          <div className="table-container">
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
+              <thead>
                 <tr>
-                  <td colSpan={3} style={{ textAlign: 'center', padding: '48px', color: 'var(--color-text-tertiary)', fontSize: '15px', fontWeight: 600 }}>No recent polls found</td>
+                  <th style={{ padding: '0 0 16px 0', textAlign: 'left', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Question</th>
+                  <th style={{ padding: '0 0 16px', textAlign: 'left', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Category</th>
+                  <th style={{ padding: '0 0 16px', textAlign: 'right', fontSize: '12px', color: 'var(--color-text-tertiary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '2px solid var(--color-border)' }}>Votes</th>
                 </tr>
-              ) : (
-                recentPolls.map((p, idx) => (
-                  <motion.tr
-                    key={p._id}
-                    initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.05 }}
-                    style={{ cursor: 'pointer', transition: 'background 0.2s ease' }}
-                    onClick={() => navigate('/')}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '20px 16px 20px 0', borderBottom: '1px solid var(--color-border)' }}>
-                      <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px', letterSpacing: '-0.01em' }}>{p.question}</div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginTop: '4px' }}>by @{p.creator?.username || 'user'}</div>
-                    </td>
-                    <td style={{ padding: '20px 16px', borderBottom: '1px solid var(--color-border)' }}>
-                      <span className="badge badge-brand">{p.category || 'General'}</span>
-                    </td>
-                    <td style={{ padding: '20px 0 20px 16px', textAlign: 'right', fontWeight: 800, fontSize: '16px', color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
-                      {p.totalVotes || (p.votes?.length) || 0}
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentPolls.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{ textAlign: 'center', padding: '48px', color: 'var(--color-text-tertiary)', fontSize: '15px', fontWeight: 600 }}>No recent polls found</td>
+                  </tr>
+                ) : (
+                  recentPolls.map((p, idx) => (
+                    <motion.tr
+                      key={p._id}
+                      initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.05 }}
+                      style={{ cursor: 'pointer', transition: 'background 0.2s ease' }}
+                      onClick={() => navigate('/')}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--color-bg)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '16px 16px 16px 0', borderBottom: '1px solid var(--color-border)' }}>
+                        <div style={{ fontWeight: 800, fontSize: '14.5px', color: 'var(--color-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px', letterSpacing: '-0.01em' }}>{p.question}</div>
+                        <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginTop: '2px' }}>by @{p.creator?.username || 'user'}</div>
+                      </td>
+                      <td style={{ padding: '16px', borderBottom: '1px solid var(--color-border)' }}>
+                        <span className="badge badge-brand">{p.category || 'General'}</span>
+                      </td>
+                      <td style={{ padding: '16px 0 16px 16px', textAlign: 'right', fontWeight: 800, fontSize: '15px', color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                        {p.totalVotes || (p.votes?.length) || 0}
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div className="card card-hover" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '-0.04em', marginBottom: '4px' }}>Poll Types</div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginBottom: '32px' }}>Distribution by format</div>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-tertiary)', marginBottom: '24px' }}>Distribution by format</div>
           <div style={{ flex: 1, width: '100%', minHeight: '200px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendingData.length ? trendingData : [{ type: 'Single', count: 18 }, { type: 'Yes/No', count: 12 }, { type: 'Rating', count: 8 }, { type: 'Image', count: 6 }]} barGap={8} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>

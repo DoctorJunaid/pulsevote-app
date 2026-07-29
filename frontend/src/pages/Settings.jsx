@@ -218,7 +218,7 @@ const Settings = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
               <div className="form-group">
                 <label className="label" style={{ fontSize: '15px' }}>Full Name</label>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} required style={{ fontWeight: 700 }} />
@@ -338,7 +338,7 @@ const Settings = () => {
                 <label className="label" style={{ fontSize: '15px' }}>Current Password</label>
                 <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" required style={{ fontWeight: 700 }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                 <div className="form-group">
                   <label className="label" style={{ fontSize: '15px' }}>New Password</label>
                   <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" required style={{ fontWeight: 700 }} />
@@ -383,7 +383,7 @@ const Settings = () => {
           </form>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
               <div>
                 <label className="label" style={{ fontSize: '13px', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Password</label>
                 <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '0.2em', marginTop: '8px' }}>

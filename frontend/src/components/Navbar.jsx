@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, Settings as SettingsIcon, Menu } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
 import { useNotifications } from '../store/useNotifications';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
@@ -11,9 +11,10 @@ const PAGE_TITLES = {
   '/bookmarks': 'Bookmarks',
   '/create': 'Create Poll',
   '/settings': 'Settings',
+  '/about': 'About',
 };
 
-const Navbar = () => {
+const Navbar = ({ onToggleMobile }) => {
   const { user, logout } = useAuth();
   const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotifications();
   const navigate = useNavigate();
@@ -63,57 +64,71 @@ const Navbar = () => {
   };
 
   return (
-    <header style={{
-      height: '72px', /* Taller for editorial feel */
+    <header className="navbar-header" style={{
+      height: '72px',
       flexShrink: 0,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 48px',
+      padding: '0 24px',
       background: 'var(--color-surface)',
       borderBottom: '1px solid var(--color-border)',
       position: 'sticky',
       top: 0,
       zIndex: 40,
+      gap: '12px',
     }}>
 
-      {/* Page Title / Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Left: Mobile Toggle & Page Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+        <button
+          onClick={onToggleMobile}
+          className="btn btn-ghost btn-icon mobile-only"
+          aria-label="Toggle navigation menu"
+          style={{ width: '40px', height: '40px', flexShrink: 0 }}
+        >
+          <Menu size={22} strokeWidth={2.5} />
+        </button>
+
         <span style={{
           fontSize: '18px',
           fontWeight: 800,
           color: 'var(--color-text-primary)',
           letterSpacing: '-0.04em',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
         }}>
           {pageTitle}
         </span>
       </div>
 
       {/* Right Side Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
 
-        {/* Search Input */}
-        <div style={{ position: 'relative', width: '280px' }}>
+        {/* Search Input (Fluid / Hidden on very small screens if overflowing) */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '240px' }}>
           <Search size={18} strokeWidth={2.5} style={{
-            position: 'absolute', left: '16px', top: '50%',
+            position: 'absolute', left: '14px', top: '50%',
             transform: 'translateY(-50%)',
             color: 'var(--color-text-tertiary)',
             pointerEvents: 'none',
           }} />
           <input
             type="text"
-            placeholder="Search polls..."
+            placeholder="Search..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             style={{
-              padding: '12px 16px 12px 44px',
-              fontSize: '14px',
-              borderRadius: '999px', /* Pill search bar */
+              padding: '10px 14px 10px 40px',
+              fontSize: '13.5px',
+              borderRadius: '999px',
               background: 'var(--color-bg)',
               border: '1px solid transparent',
               color: 'var(--color-text-primary)',
               transition: 'all 0.2s ease',
+              width: '100%',
             }}
             onFocus={e => {
               e.target.style.background = 'var(--color-surface)';
@@ -134,12 +149,12 @@ const Navbar = () => {
               if (!showNotifications && unreadCount > 0) markAsRead();
             }}
             className="btn btn-ghost btn-icon"
-            style={{ width: '44px', height: '44px', position: 'relative' }}
+            style={{ width: '40px', height: '40px', position: 'relative' }}
           >
             <Bell size={20} strokeWidth={2.5} />
             {unreadCount > 0 && (
               <span style={{
-                position: 'absolute', top: '8px', right: '10px',
+                position: 'absolute', top: '6px', right: '8px',
                 width: '10px', height: '10px',
                 background: 'var(--color-danger)',
                 borderRadius: '50%',
@@ -152,10 +167,10 @@ const Navbar = () => {
             <div
               className="animate-scaleIn dropdown-menu"
               style={{
-                position: 'absolute', top: 'calc(100% + 12px)', right: '-40px',
+                position: 'absolute', top: 'calc(100% + 12px)', right: '-8px',
                 zIndex: 100, transformOrigin: 'top right',
-                width: '320px', padding: '16px', borderRadius: '24px',
-                maxHeight: '400px', overflowY: 'auto',
+                width: '300px', maxWidth: 'calc(100vw - 32px)', padding: '16px', borderRadius: '20px',
+                maxHeight: '380px', overflowY: 'auto',
                 boxShadow: 'var(--shadow-lg)'
               }}
             >
@@ -181,7 +196,7 @@ const Navbar = () => {
                       }}>
                         {n.sender?.username?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                      <div style={{ fontSize: '14px', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: '13.5px', lineHeight: 1.4 }}>
                         <span style={{ fontWeight: 800 }}>@{n.sender?.username}</span>{' '}
                         {n.type === 'vote' && 'voted on your poll'}
                         {n.type === 'comment' && 'commented on your poll'}
@@ -195,28 +210,19 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Separator */}
-        <div style={{
-          width: '1px', height: '24px',
-          background: 'var(--color-border)',
-          margin: '0 4px',
-        }} />
-
         {/* Profile Dropdown */}
         <div style={{ position: 'relative' }} ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
+              display: 'flex', alignItems: 'center', gap: '6px',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              padding: '6px',
+              padding: '4px',
               borderRadius: '999px',
               transition: 'background 0.2s ease',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             {user?.avatar ? (
               <img
@@ -255,7 +261,7 @@ const Navbar = () => {
                 position: 'absolute', top: 'calc(100% + 12px)', right: 0,
                 zIndex: 100,
                 transformOrigin: 'top right',
-                minWidth: '200px',
+                minWidth: '180px',
                 padding: '8px',
                 borderRadius: '20px',
               }}

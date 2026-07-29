@@ -70,19 +70,19 @@ const CreatePoll = () => {
 
       {/* ── Massive Editorial Header ────────────────────── */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '20px',
-        marginBottom: '48px',
+        display: 'flex', alignItems: 'center', gap: '16px',
+        marginBottom: '36px', flexWrap: 'wrap'
       }}>
         <button
           onClick={() => navigate(-1)}
           className="btn btn-secondary btn-icon"
-          style={{ width: '48px', height: '48px' }}
+          style={{ width: '44px', height: '44px', flexShrink: 0 }}
         >
           <ArrowLeft size={20} strokeWidth={2.5} />
         </button>
         <div>
           <h1 style={{
-            fontSize: '48px', fontWeight: 800,
+            fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800,
             color: 'var(--color-text-primary)',
             margin: 0, letterSpacing: '-0.06em',
             lineHeight: 1.1,
@@ -90,7 +90,7 @@ const CreatePoll = () => {
             Create Poll.
           </h1>
           <p style={{
-            margin: '12px 0 0', fontSize: '18px', fontWeight: 500,
+            margin: '8px 0 0', fontSize: '16px', fontWeight: 500,
             color: 'var(--color-text-secondary)',
             letterSpacing: '-0.01em',
           }}>
@@ -99,12 +99,12 @@ const CreatePoll = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* Question */}
-        <div className="card" style={{ padding: '32px' }}>
+        <div className="card">
           <div className="form-group">
-            <label className="label" style={{ fontSize: '16px', marginBottom: '8px' }}>What's your question?</label>
+            <label className="label" style={{ fontSize: '15px', marginBottom: '8px' }}>What's your question?</label>
             <textarea
               required
               rows={3}
@@ -113,18 +113,18 @@ const CreatePoll = () => {
               placeholder="Type your question here..."
               style={{
                 resize: 'none', lineHeight: 1.5,
-                fontSize: '20px', fontWeight: 700,
-                padding: '24px',
+                fontSize: '18px', fontWeight: 700,
+                padding: '16px',
               }}
             />
           </div>
         </div>
 
         {/* Type & Category */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div className="card" style={{ padding: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+          <div className="card">
             <div className="form-group">
-              <label className="label" style={{ fontSize: '16px', marginBottom: '8px' }}>Poll Type</label>
+              <label className="label" style={{ fontSize: '15px', marginBottom: '8px' }}>Poll Type</label>
               <div style={{ position: 'relative' }}>
                 <select
                   value={formData.type}
@@ -142,9 +142,9 @@ const CreatePoll = () => {
             </div>
           </div>
 
-          <div className="card" style={{ padding: '32px' }}>
+          <div className="card">
             <div className="form-group">
-              <label className="label" style={{ fontSize: '16px', marginBottom: '8px' }}>Category</label>
+              <label className="label" style={{ fontSize: '15px', marginBottom: '8px' }}>Category</label>
               <div style={{ position: 'relative' }}>
                 <select
                   value={formData.category}

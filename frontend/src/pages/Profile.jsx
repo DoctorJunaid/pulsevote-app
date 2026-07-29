@@ -81,7 +81,7 @@ const Profile = () => {
         </button>
       </div>
 
-      <div className="card" style={{ padding: '32px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', gap: '24px' }}>
+      <div className="card" style={{ padding: '24px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
         {user.avatar ? (
           <img src={user.avatar} alt="avatar" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
         ) : (

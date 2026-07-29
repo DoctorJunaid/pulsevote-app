@@ -25,7 +25,7 @@ const About = () => {
     }}>
       <div style={{ marginBottom: '16px' }}>
         <h1 style={{
-          fontSize: '48px', fontWeight: 800,
+          fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800,
           color: 'var(--color-text-primary)',
           margin: 0, letterSpacing: '-0.06em',
           lineHeight: 1.1,
@@ -33,7 +33,7 @@ const About = () => {
           About PulseVote.
         </h1>
         <p style={{
-          margin: '12px 0 0', fontSize: '18px', fontWeight: 500,
+          margin: '8px 0 0', fontSize: '16px', fontWeight: 500,
           color: 'var(--color-text-secondary)',
           letterSpacing: '-0.01em',
         }}>
@@ -41,17 +41,17 @@ const About = () => {
         </p>
       </div>
 
-      <div className="card" style={{ padding: '40px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '16px', letterSpacing: '-0.04em' }}>The Story</h2>
-        <p style={{ fontSize: '16px', lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+      <div className="card">
+        <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '16px', letterSpacing: '-0.04em' }}>The Story</h2>
+        <p style={{ fontSize: '15px', lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
           PulseVote was built out of a desire to create a polling application that doesn't just work, but feels <strong>premium</strong>. In a world full of generic templates, I wanted to craft an experience that is lightning-fast, visually stunning, and packed with micro-interactions that make users smile.
         </p>
-        <p style={{ fontSize: '16px', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
+        <p style={{ fontSize: '15px', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
           Every animation, every shadow, and every state transition has been carefully engineered to provide a truly seamless, native-like feel right in your browser. From Optimistic UI interactions to smooth Lenis scrolling, it's all about the details.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
         <div className="card" style={{ padding: '32px' }}>
           <Zap size={32} color="var(--color-primary)" style={{ marginBottom: '16px' }} />
           <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>Optimistic UI</h3>

@@ -19,20 +19,20 @@ const LinkedinIcon = () => (
 
 const Footer = () => {
   return (
-    <footer style={{
-      marginTop: '64px',
-      padding: '48px',
+    <footer className="footer-container" style={{
+      marginTop: '48px',
+      padding: '32px 24px',
       background: 'var(--color-text-primary)',
       borderRadius: '24px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '32px',
+      gap: '24px',
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: '15px',
+      fontSize: '14.5px',
       fontWeight: 500,
       boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
         
         {/* Brand & Creator */}
         <div>
@@ -41,14 +41,14 @@ const Footer = () => {
               PulseVote.
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             Designed & Developed with <Heart size={14} color="var(--color-primary)" fill="var(--color-primary)" /> by 
             <span style={{ fontWeight: 800, color: '#FFFFFF' }}>Muhammad Junaid</span>
           </div>
         </div>
 
         {/* Links */}
-        <div style={{ display: 'flex', gap: '32px', fontWeight: 600 }}>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', fontWeight: 600 }}>
           <a href="https://github.com/doctorJunaid" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'none' }} className="hover-text-white">
             <GithubIcon /> GitHub
           </a>
@@ -65,11 +65,13 @@ const Footer = () => {
       </div>
       
       <div style={{ 
-        fontSize: '14px', 
+        fontSize: '13.5px', 
         color: 'rgba(255, 255, 255, 0.5)', 
         display: 'flex', 
         justifyContent: 'space-between',
-        paddingTop: '24px',
+        flexWrap: 'wrap',
+        gap: '12px',
+        paddingTop: '20px',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
         <span>&copy; {new Date().getFullYear()} PulseVote. All rights reserved.</span>

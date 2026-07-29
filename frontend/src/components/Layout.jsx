@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import Lenis from 'lenis';
 
 const Layout = ({ children }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     // Attach Lenis to the window for best performance and native feel
     const lenis = new Lenis({
@@ -29,25 +31,19 @@ const Layout = ({ children }) => {
   }, []);
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      background: 'var(--color-bg)',
-    }}>
-      <Sidebar />
+    <div className="main-layout-wrapper">
+      <Sidebar 
+        mobileOpen={mobileMenuOpen} 
+        onCloseMobile={() => setMobileMenuOpen(false)} 
+      />
 
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        marginLeft: '260px', /* Sidebar width */
-        minHeight: '100vh',
-        background: 'var(--color-bg)',
-      }}>
-        <Navbar />
+      <div className="main-content-area">
+        <Navbar 
+          onToggleMobile={() => setMobileMenuOpen(prev => !prev)} 
+        />
 
         {/* Main Content Area */}
-        <div style={{ padding: '48px 64px 80px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="main-children-container">
           <div style={{ flex: 1 }}>
             {children}
           </div>

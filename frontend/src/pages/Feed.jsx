@@ -51,12 +51,13 @@ const Feed = () => {
         transition={{ duration: 0.5, ease: 'easeOut' }}
         style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
-          marginBottom: '48px',
+          flexWrap: 'wrap', gap: '20px',
+          marginBottom: '36px',
         }}
       >
         <div>
           <h1 style={{
-            fontSize: '48px', fontWeight: 800,
+            fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800,
             color: 'var(--color-text-primary)',
             margin: 0, letterSpacing: '-0.06em',
             lineHeight: 1.1,
@@ -64,7 +65,7 @@ const Feed = () => {
             Explore.
           </h1>
           <p style={{
-            margin: '12px 0 0', fontSize: '18px', fontWeight: 500,
+            margin: '8px 0 0', fontSize: '16px', fontWeight: 500,
             color: 'var(--color-text-secondary)',
             letterSpacing: '-0.01em',
           }}>
@@ -72,7 +73,7 @@ const Feed = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <FilterDropdown
             label="Sort"
             value={sort}

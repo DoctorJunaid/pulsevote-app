@@ -24,14 +24,14 @@ const Auth = () => {
       minHeight: '100vh',
       background: 'var(--color-bg)',
       display: 'flex', flexDirection: 'column',
-      padding: '48px 24px',
+      padding: '24px 16px',
     }}>
 
-      {/* ── Brand Header (Editorial left-aligned or center) ── */}
+      {/* ── Brand Header ── */}
       <div style={{
         maxWidth: '1200px', width: '100%', margin: '0 auto',
         display: 'flex', alignItems: 'center', gap: '12px',
-        marginBottom: '64px',
+        marginBottom: '32px',
       }}>
         <div style={{
           width: '40px', height: '40px', borderRadius: '12px',
@@ -60,11 +60,11 @@ const Auth = () => {
           width: '100%', maxWidth: '460px',
         }}>
 
-          {/* Massive Typography Greeting */}
-          <div style={{ marginBottom: '40px' }}>
+          {/* Typography Greeting */}
+          <div style={{ marginBottom: '24px' }}>
             <h1 style={{
-              fontSize: '48px', fontWeight: 800,
-              color: 'var(--color-text-primary)', margin: '0 0 16px',
+              fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 800,
+              color: 'var(--color-text-primary)', margin: '0 0 12px',
               letterSpacing: '-0.06em',
               lineHeight: 1.1,
             }}>
@@ -75,7 +75,7 @@ const Auth = () => {
                 : 'Set new password.'}
             </h1>
             <p style={{
-              fontSize: '18px', fontWeight: 500,
+              fontSize: '16px', fontWeight: 500,
               color: 'var(--color-text-secondary)',
               letterSpacing: '-0.01em',
             }}>
@@ -86,7 +86,7 @@ const Auth = () => {
           </div>
 
           {/* Auth Card */}
-          <div className="card" style={{ padding: '40px' }}>
+          <div className="card">
 
             {/* Mode Switcher Tabs */}
             {(mode === 'login' || mode === 'register') && (
