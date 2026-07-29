@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../store/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Upload, Camera } from 'lucide-react';
+import { Zap, Eye, EyeOff, Upload, Camera, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 
 const variants = {
@@ -20,45 +20,117 @@ const Auth = () => {
   const handleForgotSuccess = (email) => { setVerifyEmail(email); setMode('reset'); };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--color-bg)',
-      display: 'flex', flexDirection: 'column',
-      padding: '24px 16px',
-    }}>
-
-      {/* ── Brand Header ── */}
-      <div style={{
-        maxWidth: '1200px', width: '100%', margin: '0 auto',
-        display: 'flex', alignItems: 'center', gap: '12px',
-        marginBottom: '32px',
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+      
+      {/* ── Left Side (Image) ── */}
+      <div className="desktop-only" style={{
+        flex: 1,
+        padding: '24px',
+        paddingRight: 0,
       }}>
         <div style={{
-          width: '40px', height: '40px', borderRadius: '12px',
-          background: 'var(--color-text-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#FFFFFF',
+          width: '100%', height: '100%',
+          borderRadius: '32px',
+          overflow: 'hidden',
+          position: 'relative',
+          boxShadow: 'var(--shadow-float)',
         }}>
-          <Zap size={20} strokeWidth={2.5} />
-        </div>
-        <div style={{
-          fontSize: '24px', fontWeight: 800,
-          color: 'var(--color-text-primary)',
-          letterSpacing: '-0.06em',
-          lineHeight: 1,
-        }}>
-          PulseVote.
+          <img 
+            src="/auth-bg.png" 
+            alt="PulseVote Premium Experience" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', bottom: '48px', left: '48px', right: '48px',
+            color: '#FFFFFF',
+          }}>
+            <h2 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '16px', color: '#FFF', letterSpacing: '-0.04em' }}>
+              Next-generation polling.
+            </h2>
+            <p style={{ fontSize: '18px', fontWeight: 500, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>
+              Join thousands of communities making data-driven decisions in real-time with PulseVote.
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* ── Right Side (Form) ── */}
       <div style={{
         flex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: '100%',
+        display: 'flex', flexDirection: 'column',
+        padding: '32px',
       }}>
+        {/* ── Brand Header ── */}
         <div style={{
-          width: '100%', maxWidth: '460px',
+          display: 'flex', alignItems: 'center', gap: '12px',
         }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: 'var(--color-text-primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#FFFFFF',
+          }}>
+            <Zap size={20} strokeWidth={2.5} />
+          </div>
+          <div style={{
+            fontSize: '24px', fontWeight: 800,
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.06em',
+            lineHeight: 1,
+          }}>
+            PulseVote.
+          </div>
+        </div>
+
+        <div style={{
+          flex: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '100%',
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '460px',
+          }}>
+
+          {/* Breadcrumbs */}
+          <nav aria-label="Breadcrumb" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '28px',
+            fontSize: '15px',
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+          }}>
+            <Link
+              to="/"
+              style={{
+                color: 'var(--color-text-tertiary)',
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
+            >
+              <ArrowLeft size={16} strokeWidth={2.5} />
+              Home
+            </Link>
+            <span style={{ color: 'var(--color-text-tertiary)', opacity: 0.4 }}>/</span>
+            <span style={{ color: 'var(--color-text-primary)' }}>
+              {mode === 'login' ? 'Sign In' 
+                : mode === 'register' ? 'Sign Up'
+                : mode === 'verify' ? 'Verify Email'
+                : mode === 'forgot' ? 'Forgot Password'
+                : 'Reset Password'}
+            </span>
+          </nav>
 
           {/* Typography Greeting */}
           <div style={{ marginBottom: '24px' }}>
@@ -149,6 +221,8 @@ const Auth = () => {
           </div>
         </div>
       </div>
+      </div>
+
     </div>
   );
 };

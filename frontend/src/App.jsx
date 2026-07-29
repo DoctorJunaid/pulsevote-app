@@ -53,6 +53,18 @@ const ProtectedRoute = ({ children }) => {
   return <Layout>{children}</Layout>;
 };
 
+const IndexRoute = () => {
+  const { isAuthenticated } = useAuth();
+  if (isAuthenticated) {
+    return (
+      <ProtectedRoute>
+        <PageWrapper><Feed /></PageWrapper>
+      </ProtectedRoute>
+    );
+  }
+  return <PageWrapper><Landing /></PageWrapper>;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
@@ -66,15 +78,7 @@ const AnimatedRoutes = () => {
           </ProtectedRoute>
         } />
 
-        <Route path="/" element={
-          <PageWrapper><Landing /></PageWrapper>
-        } />
-
-        <Route path="/explore" element={
-          <ProtectedRoute>
-            <PageWrapper><Feed /></PageWrapper>
-          </ProtectedRoute>
-        } />
+        <Route path="/" element={<IndexRoute />} />
 
         <Route path="/my-polls" element={
           <ProtectedRoute>

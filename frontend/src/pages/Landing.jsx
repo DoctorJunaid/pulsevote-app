@@ -54,7 +54,7 @@ const LandingNav = () => {
       
       <div style={{ display: 'flex', gap: '12px' }}>
         {isAuthenticated ? (
-          <Link to="/explore" style={{ textDecoration: 'none' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -90,32 +90,7 @@ const LandingNav = () => {
   );
 };
 
-const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    className="card"
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-    }}
-  >
-    <div style={{
-      width: '48px', height: '48px',
-      borderRadius: '16px',
-      background: 'var(--color-primary-subtle)',
-      color: 'var(--color-primary)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Icon size={24} strokeWidth={2} />
-    </div>
-    <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>{title}</h3>
-    <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: 0, fontSize: '15px' }}>{desc}</p>
-  </motion.div>
-);
+// FeatureCard component removed in favor of the zig-zag layout directly in the Features section
 
 const ProjectCard = ({ title, desc, tags, link, delay }) => (
   <motion.div
@@ -163,32 +138,24 @@ const Landing = () => {
       
       {/* Hero Section */}
       <section style={{
-        padding: '180px 20px 120px',
+        padding: '160px 20px 80px',
+        maxWidth: '1300px',
+        margin: '0 auto',
         display: 'flex',
-        flexDirection: 'column',
+        flexWrap: 'wrap',
         alignItems: 'center',
-        textAlign: 'center',
+        gap: '48px',
         position: 'relative',
       }}>
-        {/* Abstract Background Element (Subtle Editorial Glow) */}
-        <div style={{
-          position: 'absolute', top: '10%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '60vw', height: '60vw', maxWidth: '600px', maxHeight: '600px',
-          background: 'radial-gradient(circle, var(--color-primary-subtle) 0%, rgba(244, 242, 238, 0) 70%)',
-          zIndex: 0, pointerEvents: 'none'
-        }} />
-        
+        {/* Left Content */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          style={{ maxWidth: '840px', zIndex: 1 }}
+          style={{ flex: '1 1 480px', zIndex: 1 }}
         >
-
-          
           <h1 style={{
-            fontSize: 'clamp(48px, 8vw, 84px)',
+            fontSize: 'clamp(48px, 6vw, 72px)',
             fontWeight: 800,
             lineHeight: 1.05,
             letterSpacing: '-0.05em',
@@ -202,14 +169,13 @@ const Landing = () => {
             fontSize: 'clamp(18px, 2vw, 22px)',
             color: 'var(--color-text-secondary)',
             lineHeight: 1.6,
-            margin: '0 auto 48px auto',
-            maxWidth: '640px',
+            margin: '0 0 48px 0',
             fontWeight: 500
           }}>
             Create beautiful polls, vote instantly, and see results update live. The most carefully crafted polling platform on the web.
           </p>
           
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <Link to="/auth" style={{ textDecoration: 'none' }}>
               <motion.button 
                 whileHover={{ scale: 1.02 }}
@@ -230,42 +196,91 @@ const Landing = () => {
             </a>
           </div>
         </motion.div>
+
+        {/* Right Image */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          style={{ flex: '1 1 480px', position: 'relative' }}
+        >
+          <div style={{
+            width: '100%',
+            aspectRatio: '1/1',
+            borderRadius: '40px',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-float)',
+            position: 'relative'
+          }}>
+            <img 
+              src="/landing-hero.png" 
+              alt="PulseVote Dashboard" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
-      <section style={{ padding: '100px 20px', background: 'var(--color-surface)', position: 'relative', zIndex: 1, borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '16px', letterSpacing: '-0.04em' }}>Premium Features</h2>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '18px', maxWidth: '500px', margin: '0 auto', fontWeight: 500 }}>
-              Everything you need to gather feedback efficiently, packaged in a stunning editorial interface.
-            </p>
-          </div>
+      <section style={{ padding: '120px 20px', background: 'var(--color-surface)', position: 'relative', zIndex: 1, borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '160px' }}>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px'
-          }}>
-            <FeatureCard 
-              delay={0.1}
-              icon={BarChart2} 
-              title="Real-Time Analytics" 
-              desc="Watch the votes roll in instantly. No refreshing required. The charts update smoothly as data arrives." 
-            />
-            <FeatureCard 
-              delay={0.2}
-              icon={Users} 
-              title="Community Feed" 
-              desc="Explore trending polls from the community. Vote, like, and bookmark your favorite topics effortlessly." 
-            />
-            <FeatureCard 
-              delay={0.3}
-              icon={Shield} 
-              title="Secure Voting" 
-              desc="Robust authentication and fraud prevention ensures every vote is unique and securely recorded." 
-            />
+          {/* Feature 1 (Text Left, Image Right) */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '64px' }}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              style={{ flex: '1 1 400px' }}
+            >
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                <BarChart2 size={28} strokeWidth={2.5} />
+              </div>
+              <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '20px', letterSpacing: '-0.04em', color: 'var(--color-text-primary)' }}>Real-Time Analytics.</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '18px', lineHeight: 1.6, fontWeight: 500 }}>
+                Watch the votes roll in instantly. No refreshing required. The charts update smoothly as data arrives, providing an engaging experience for your audience.
+              </p>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              style={{ flex: '1 1 500px' }}
+            >
+              <div style={{ width: '100%', borderRadius: '32px', overflow: 'hidden', boxShadow: 'var(--shadow-md)', aspectRatio: '4/3' }}>
+                <img src="/feature-analytics.png" alt="Real-time analytics" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            </motion.div>
           </div>
+
+          {/* Feature 2 (Image Left, Text Right) */}
+          <div style={{ display: 'flex', flexWrap: 'wrap-reverse', alignItems: 'center', gap: '64px' }}>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              style={{ flex: '1 1 500px' }}
+            >
+              <div style={{ width: '100%', borderRadius: '32px', overflow: 'hidden', boxShadow: 'var(--shadow-md)', aspectRatio: '4/3' }}>
+                <img src="/feature-community.png" alt="Community engagement" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              style={{ flex: '1 1 400px' }}
+            >
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'var(--color-primary-subtle)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                <Users size={28} strokeWidth={2.5} />
+              </div>
+              <h2 style={{ fontSize: '40px', fontWeight: 800, marginBottom: '20px', letterSpacing: '-0.04em', color: 'var(--color-text-primary)' }}>Community First.</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '18px', lineHeight: 1.6, fontWeight: 500 }}>
+                Explore trending polls from the community. Vote, like, and bookmark your favorite topics effortlessly. Secure, fraud-free voting built natively.
+              </p>
+            </motion.div>
+          </div>
+
         </div>
       </section>
 
