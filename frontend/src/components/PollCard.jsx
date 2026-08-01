@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { Share2, Bookmark, MoreHorizontal, Users, MessageSquare, Trash2, Lock, Unlock, Send, Edit, BarChart3, X, Eye } from 'lucide-react';
 import { useAuth } from '../store/useAuth';
 import { Link } from 'react-router-dom';
-
+import LiquidVoting from './LiquidVoting';
 // Premium entrance animation for the whole card
 const cardVariants = {
   hidden: { opacity: 0, y: 40, scale: 0.96 },
@@ -34,6 +34,7 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [editTitle, setEditTitle] = useState(poll.question);
   const [editCategory, setEditCategory] = useState(poll.category || 'General');
+  const [activeDragIndex, setActiveDragIndex] = useState(null);
   const menuRef = useRef(null);
   const viewRecorded = useRef(false);
 
@@ -454,139 +455,20 @@ const PollCard = ({ poll, onVote, isOwner: propIsOwner }) => {
           const isMyVote = optimisticPoll.userVoted && (optimisticPoll.votedOption === opt._id || optimisticPoll.votedOption === String(i) || optimisticPoll.votedOption === opt.text);
           
           return (
-            <motion.button
+            <LiquidVoting
               key={opt._id || i}
-              whileTap={(!optimisticPoll.isClosed) ? { scale: 0.98 } : {}}
-              onClick={() => handleVote(i)}
-              disabled={optimisticPoll.isClosed}
-              style={{
-                position: 'relative',
-                width: '100%',
-                background: 'var(--color-bg)',
-                borderRadius: optimisticPoll.type === 'image' ? '16px' : '999px',
-                padding: optimisticPoll.type === 'image' ? '16px' : '16px 24px',
-                display: 'flex', 
-                flexDirection: optimisticPoll.type === 'image' ? 'column' : 'row',
-                alignItems: optimisticPoll.type === 'image' ? 'flex-start' : 'center', 
-                justifyContent: optimisticPoll.type === 'image' ? 'flex-end' : 'space-between',
-                cursor: optimisticPoll.isClosed ? 'not-allowed' : 'pointer',
-                overflow: 'hidden',
-                border: isMyVote ? '2px solid var(--color-primary)' : '2px solid transparent',
-                fontFamily: 'inherit',
-                outline: 'none',
-                aspectRatio: optimisticPoll.type === 'image' ? '1 / 1' : undefined,
-                minHeight: optimisticPoll.type === 'image' ? '150px' : undefined
-              }}
-            >
-              {/* Background Image for Image Polls */}
-              {optimisticPoll.type === 'image' && opt.image && (
-                <>
-                  <img 
-                    src={opt.image.includes('cloudinary.com') ? opt.image.replace('/upload/', '/upload/f_auto,q_auto,w_400,h_400,c_fill/') : opt.image} 
-                    alt={opt.text}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
-                    loading="lazy"
-                  />
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0) 100%)',
-                    zIndex: 1
-                  }} />
-                </>
-              )}
-
-              {/* Progress fill */}
-              <motion.div
-                initial={optimisticPoll.type === 'image' ? { height: 0 } : { width: 0 }}
-                animate={optimisticPoll.type === 'image' ? { height: `${pct}%` } : { width: `${pct}%` }}
-                transition={{ type: 'spring', stiffness: 100, damping: 20, mass: 1 }}
-                style={optimisticPoll.type === 'image' ? {
-                  position: 'absolute', left: 0, bottom: 0, right: 0,
-                  background: 'var(--color-primary)',
-                  opacity: 0.6,
-                  zIndex: 1
-                } : {
-                  position: 'absolute', left: 0, top: 0, bottom: 0,
-                  background: 'var(--color-primary)',
-                  borderRadius: '999px',
-                }}
-              />
-              
-              <div style={{
-                position: 'relative', zIndex: 2,
-                display: 'flex', alignItems: 'center', gap: '16px', width: '100%'
-              }}>
-                {optimisticPoll.type !== 'image' && opt.image && (
-                  <div style={{
-                    width: '48px', height: '48px', borderRadius: '8px',
-                    overflow: 'hidden', flexShrink: 0,
-                    boxShadow: 'var(--shadow-sm)'
-                  }}>
-                    <img 
-                      src={opt.image.includes('cloudinary.com') ? opt.image.replace('/upload/', '/upload/f_auto,q_auto,w_100,h_100,c_fill/') : opt.image} 
-                      alt={opt.text}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-                <span style={{
-                  fontSize: optimisticPoll.type === 'image' ? '18px' : '15px', 
-                  fontWeight: 800,
-                  color: optimisticPoll.type === 'image' ? '#FFFFFF' : (pct > (opt.image ? 25 : 15) ? '#FFFFFF' : 'var(--color-text-primary)'),
-                  transition: 'color 0.3s ease',
-                  letterSpacing: '-0.02em',
-                  textAlign: 'left',
-                  textShadow: optimisticPoll.type === 'image' ? '0 2px 4px rgba(0,0,0,0.5)' : 'none',
-                  flex: 1
-                }}>
-                  {opt.text}
-                </span>
-              </div>
-
-                {optimisticPoll.type !== 'image' && (
-                  <div style={{
-                    position: 'relative', zIndex: 2,
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                  }}>
-                    <span style={{
-                      fontSize: '13px',
-                      color: pct > 85 ? 'rgba(255,255,255,0.8)' : 'var(--color-text-tertiary)',
-                      fontWeight: 600,
-                      transition: 'color 0.3s ease',
-                    }}>
-                      {voteCount} votes
-                    </span>
-                    <span style={{
-                      fontSize: '15px',
-                      fontWeight: 800,
-                      color: pct > 95 ? '#FFFFFF' : 'var(--color-text-primary)',
-                      fontVariantNumeric: 'tabular-nums',
-                      transition: 'color 0.3s ease',
-                    }}>
-                      {pct}%
-                    </span>
-                  </div>
-                )}
-
-              {optimisticPoll.type === 'image' && (
-                <div style={{
-                  position: 'relative', zIndex: 2,
-                  display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '4px'
-                }}>
-                  <span style={{
-                    fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: 600,
-                  }}>
-                    {voteCount} votes
-                  </span>
-                  <span style={{
-                    fontSize: '14px', fontWeight: 800, color: '#FFFFFF', fontVariantNumeric: 'tabular-nums',
-                  }}>
-                    {pct}%
-                  </span>
-                </div>
-              )}
-            </motion.button>
+              option={opt}
+              index={i}
+              onVote={handleVote}
+              isClosed={optimisticPoll.isClosed}
+              isVoted={optimisticPoll.userVoted || optimisticPoll.hasVotedLocally}
+              percentage={pct}
+              votesCount={voteCount}
+              isMyVote={isMyVote}
+              type={optimisticPoll.type}
+              activeDragIndex={activeDragIndex}
+              setActiveDragIndex={setActiveDragIndex}
+            />
           );
         })}
       </div>
