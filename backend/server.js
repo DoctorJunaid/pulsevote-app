@@ -22,9 +22,20 @@ app.use(cors());
 // 2. JSON Parser: Automatically parses incoming JSON payload request bodies
 app.use(express.json());
 
-// ==================== DATABASE CONNECTION ====================
-// Establishes connection to MongoDB via Mongoose
-connectDB();
+// ==================== DATABASE CONNECTION MIDDLEWARE ====================
+// Ensures MongoDB connection is established before processing any incoming API route in Serverless environment
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error("Database Middleware Error:", err.message);
+        res.status(500).json({
+            message: "Database connection failed. Check MONGO_URI or MongoDB Atlas IP Whitelist (0.0.0.0/0).",
+            error: err.message
+        });
+    }
+});
 
 // ==================== ROUTE REGISTRATION (API V1) ====================
 // 1. Authentication & Account Management Routes
